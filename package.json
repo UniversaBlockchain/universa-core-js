@@ -1,0 +1,38 @@
+{
+  "name": "universa-core",
+  "version": "0.1.0",
+  "description": "Tools to perform basic operations with Universa networks and contracts",
+  "main": "src/index.js",
+  "scripts": {
+    "coverage": "nyc npm run test",
+    "test": "mocha --timeout 5000",
+    "build": "NODE_ENV=production webpack --config webpack.prod.js"
+  },
+  "keywords": [
+    "network",
+    "contracts",
+    "frontend",
+    "client"
+  ],
+  "author": "Universa Blockchain Team",
+  "license": "(BSD-3-Clause OR GPL-2.0)",
+  "bugs": "https://github.com/UniversaBlockchain/universa-core-js/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/UniversaBlockchain/universa-core-js"
+  },
+  "dependencies": {
+    "unicrypto": "^0.1.0",
+    "xhr-request": "^1.1.0"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "file-loader": "^6.0.0",
+    "mocha": "^8.0.1",
+    "nyc": "^14.1.1",
+    "terser-webpack-plugin": "^2.2.2",
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.10",
+    "webpack-merge": "^4.2.2"
+  }
+}
