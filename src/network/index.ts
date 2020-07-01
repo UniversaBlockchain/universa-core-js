@@ -1,36 +1,55 @@
-const request = require('xhr-request');
-const Node = require('./node');
-const Topology = require('./topology');
-const { retry, abortable, readJSON } = require('../utils');
-const NodeConnection = require('./node_connection');
+import request from 'xhr-request';
+import { Node } from './node';
+import Topology from './topology';
+import { retry, abortable, readJSON } from '../utils';
+import NodeConnection from './node_connection';
+
 const mainnet = require('../../mainnet.json');
 
-const {
+import {
   Boss,
   decode64,
   encode64,
   PrivateKey
-} = require('unicrypto');
+} from 'unicrypto';
 
 const CHECK_CONTRACT_TIMEOUT = 2000;
 
-function createHashId(id) {
+function createHashId(id: Uint8Array) {
   return {
     __type: "HashId",
     composite3: id
   };
 }
 
-class Network {
-  constructor(privateKey, options = {}) {
-    this.options = options;
+interface NetworkOptions {
+  topologyKey?: string,
+  topology?: Topology,
+  topologyFile?: string
+}
+
+type ConnectionDict = { [id: string]: NodeConnection };
+
+export default class Network {
+  options: NetworkOptions;
+  connections: ConnectionDict;
+  topologyKey: string;
+  ready: Promise<void>;
+  authKey: PrivateKey;
+  setReady: any;
+  topology: Topology | undefined;
+
+  constructor(privateKey: PrivateKey, options?: NetworkOptions) {
+    this.options = options || {};
     this.connections = {};
-    this.topologyKey = options.topologyKey || "__universa_topology";
+    this.topologyKey = this.options.topologyKey || "__universa_topology";
     this.ready = new Promise((resolve, reject) => { this.setReady = resolve; });
     this.authKey = privateKey;
   }
 
-  size() { return this.topology.size(); }
+  size() {
+    if (this.topology) return this.topology.size();
+  }
 
   async getLastTopology() {
     if (typeof window !== 'undefined') {
@@ -57,6 +76,7 @@ class Network {
     if (typeof window === 'undefined') return;
 
     const boss = new Boss();
+    if (!this.topology) throw new Error("Can't save undefined topology");
     const packed = this.topology.pack();
     localStorage.setItem(this.topologyKey, encode64(boss.dump(packed)));
   }
@@ -72,13 +92,16 @@ class Network {
     return this;
   }
 
-  async nodeConnection(nodeId) {
+  async nodeConnection(nodeId: string) {
+    if (!this.topology)
+      throw new Error("can't establish connection without topology");
+
     const node = this.topology.getNode(nodeId);
     if (this.connections[nodeId]) return this.connections[nodeId];
 
     await this.ready;
 
-    const connection = new NodeConnection(node, this.authKey, this.options);
+    const connection = new NodeConnection(node, this.authKey);
     await connection.connect();
     this.connections[nodeId] = connection;
 
@@ -88,11 +111,19 @@ class Network {
   async getRandomConnection() {
     await this.ready;
 
+    if (!this.topology)
+      throw new Error("can't establish connection without topology");
+
     return this.nodeConnection(this.topology.getRandomNodeId());
   }
 
-  command(name, options, connection, requestOptions) {
-    let req, conn;
+  command(
+    name: string,
+    options?: any,
+    connection?: NodeConnection,
+    requestOptions?: any
+  ) {
+    let req: any, conn: NodeConnection;
 
     const run = async () => {
       conn = conn || connection || await this.getRandomConnection();
@@ -109,25 +140,30 @@ class Network {
     }), req);
   }
 
-  checkContract(id, connection, requestOptions = {}) {
-    let itemId = id;
+  checkContract(
+    id: Uint8Array | string,
+    connection?: NodeConnection,
+    requestOptions?: any) {
+    let itemId: Uint8Array;
     if (typeof id === "string") itemId = decode64(id);
+    else itemId = id;
 
     const hashId = createHashId(itemId);
 
-    return this.command("getState", { itemId: hashId }, connection, requestOptions);
+    return this.command("getState", { itemId: hashId }, connection, requestOptions || {});
   }
 
-  checkParcel(id) {
-    let itemId = id;
+  checkParcel(id: Uint8Array | string) {
+    let itemId: Uint8Array;
     if (typeof id === "string") itemId = decode64(id);
+    else itemId = id;
 
     const hashId = createHashId(itemId);
 
     return this.command("getParcelProcessingState", { parcelId: hashId });
   }
 
-  isApproved(id, trustLevel) {
+  isApproved(id: Uint8Array | string, trustLevel: number): Promise<boolean> {
     const self = this;
 
     return new Promise((resolve, reject) => {
@@ -135,28 +171,32 @@ class Network {
       if (tLevel > 0.9) tLevel = 0.9;
 
       // const end = new Date((new Date()).getTime() + millisToWait).getTime();
-      let Nt = Math.ceil(self.size() * tLevel);
+      const size = self.size();
+      if (!size) throw new Error("missing topology");
+
+      let Nt = Math.ceil(size * tLevel);
       if (Nt < 1) Nt = 1;
-      const N10 = (Math.floor(self.size() * 0.1)) + 1;
+      const N10 = (Math.floor(size * 0.1)) + 1;
       const Nn = Math.max(Nt + 1, N10);
       let resultFound = false;
 
       let positive = 0;
       let negative = 0;
       const requests = [];
+      if (!self.topology) throw new Error("missing topology");
       const ids = Object.keys(self.topology.nodes);
 
-      const isPending = (state) =>
+      const isPending = (state: string) =>
         state.indexOf("PENDING") === 0 || state.indexOf("LOCKED") === 0;
 
-      function success(status) {
+      function success(status: boolean) {
         if (resultFound) return;
 
         resultFound = true;
         resolve(status);
       }
 
-      function failure(err) {
+      function failure(err: Error) {
         if (resultFound) return;
 
         resultFound = true;
@@ -165,11 +205,12 @@ class Network {
 
       function processNext() {
         if(!resultFound && ids.length > 0) {
-          processNode(ids.pop());
+          const id = ids.pop();
+          id && processNode(id);
         }
       }
 
-      function processVote(state, nodeId) {
+      function processVote(state: string, nodeId: string) {
         if (resultFound) return;
         if (isPending(state)) return ids.unshift(nodeId);
         if (state === "APPROVED") {
@@ -182,7 +223,7 @@ class Network {
         }
       }
 
-      async function processNode(nodeId) {
+      async function processNode(nodeId: string) {
         if (resultFound) return;
 
         try {
@@ -207,7 +248,3 @@ class Network {
     });
   }
 }
-
-Network.Topology = Topology;
-
-module.exports = Network;

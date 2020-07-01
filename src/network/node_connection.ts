@@ -1,33 +1,41 @@
-const request = require('xhr-request');
-const { abortable } = require('../utils');
+import request from 'xhr-request';
+import { abortable } from '../utils';
+import { Node } from './node';
+import { PrivateKey, PrivateKeySignOpts } from 'unicrypto';
 
-const {
+import {
   Boss,
   randomBytes,
   encode64,
   SHA,
   SymmetricKey
-} = require('unicrypto');
+} from 'unicrypto';
 
 const CONNECTION_TIMEOUT = 1000;
 
-class NodeConnection {
-  constructor(node, authKey, options) {
+export default class NodeConnection {
+  node: Node;
+  authKey: PrivateKey;
+  sessionId: number | undefined;
+  sessionKey: SymmetricKey | undefined;
+
+  constructor(node: Node, authKey: PrivateKey) {
     this.node = node;
     this.authKey = authKey;
-    this.options = options;
   }
 
   async connect() {
     const url = this.node.https;
     const clientNonce = randomBytes(47);
     const boss = new Boss();
-    const signatureOpts = { pssHash: 'sha512' };
+    const signatureOpts: PrivateKeySignOpts = { pssHash: "sha512" };
 
     console.log(`setting up protected connection to ${url}`);
 
+    const clientKey = await this.authKey.publicKey.pack();
+
     const connectionData = await this.request("connect", {
-      client_key: await this.authKey.publicKey.packed(),
+      client_key: clientKey,
       jsapi: true
     }, { timeout: CONNECTION_TIMEOUT });
 
@@ -45,7 +53,11 @@ class NodeConnection {
     });
 
     const tokenData = token.data;
-    const isVerified = await this.node.key.verify(
+    const nodeKey = await this.node.getPublicKey();
+
+    if (!nodeKey) throw new Error("Node key is undefined");
+
+    const isVerified = await nodeKey.verify(
       tokenData, token.signature, signatureOpts
     );
 
@@ -72,7 +84,7 @@ class NodeConnection {
     return this;
   }
 
-  async command(name, params = {}, requestOptions = {}) {
+  async command(name: string, params: any = {}, requestOptions: any = {}) {
     if (!this.sessionKey) throw new Error("not in session");
 
     const sk = this.sessionKey;
@@ -86,7 +98,7 @@ class NodeConnection {
     }, requestOptions);
 
     return abortable(new Promise((resolve, reject) => {
-      req.then(async (response) => {
+      req.then(async (response: any) => {
         const decrypted = await sk.decrypt(response.result);
         const result = boss.load(decrypted);
         if (result.error) reject(result.error);
@@ -95,7 +107,7 @@ class NodeConnection {
     }), req);
   }
 
-  request(path, params = {}, requestOptions = {}) {
+  request(path: string, params: any = {}, requestOptions: any = {}) {
     const url = `${this.node.https}/${path}`;
     const boss = new Boss();
     const data = { requestData64: encode64(boss.dump(params)) };
@@ -103,11 +115,11 @@ class NodeConnection {
     return NodeConnection.request("POST", url, { data, ...requestOptions });
   }
 
-  static request(method, url, options = {}) {
+  static request(method: string, url: string, options: any = {}) {
     var req;
 
     const promise = new Promise((resolve, reject) => {
-      function onResponse(err, data) {
+      function onResponse(err: Error, data: any) {
         if (err) return reject(err);
 
         const boss = new Boss();
@@ -117,7 +129,7 @@ class NodeConnection {
         else reject(answer);
       }
 
-      const opts = {
+      const opts: any = {
         method,
         responseType: 'arraybuffer',
         headers: options.headers || {},
@@ -135,5 +147,3 @@ class NodeConnection {
     return abortable(promise, req);
   }
 }
-
-module.exports = NodeConnection;

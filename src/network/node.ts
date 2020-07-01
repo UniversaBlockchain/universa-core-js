@@ -1,28 +1,26 @@
-const {
+import NodeConnection from './node_connection';
+
+import {
   PublicKey,
   decode64,
   encode64,
   Boss
-} = require('unicrypto');
+} from 'unicrypto';
 
-const NodeConnection = require('./node_connection');
-
-const forceHTTPS = (url) =>
+const forceHTTPS = (url: string) =>
   url.replace("http://", "https://").replace(":8080", ":443");
 
 const GET_TOPOLOGY_TIMEOUT = 1000;
 
-function difference(setA, setB) {
+function difference(setA: Set<string>, setB: Set<string>) {
   let _difference = new Set(setA);
 
-  for (let elem of setB) {
-      _difference.delete(elem);
-  }
+  setB.forEach((elem) => _difference.delete(elem));
 
   return _difference;
 }
 
-function isEqual(setA, setB) {
+function isEqual(setA: Set<string>, setB: Set<string>) {
   if (setA.size !== setB.size) return false;
 
   const diff = difference(setA, setB);
@@ -30,8 +28,26 @@ function isEqual(setA, setB) {
   return diff.size === 0;
 }
 
-class Node {
-  constructor(info) {
+export interface NodeInfo {
+  name: string,
+  number: number,
+  domain_urls: Array<string>,
+  direct_urls: Array<string>,
+  key: Uint8Array
+}
+
+export class Node {
+  id: string | undefined;
+  key: PublicKey | undefined;
+  name: string;
+  https: string;
+  ready: Promise<void>;
+  keyBIN: Uint8Array;
+  number: number;
+  domainURLs: Set<string>;
+  directURLs: Set<string>;
+
+  constructor(info: NodeInfo) {
     this.name = info.name;
     this.number = info.number;
     this.domainURLs = new Set(info.domain_urls);
@@ -58,7 +74,13 @@ class Node {
     return this.id;
   }
 
-  async equals(node) {
+  async getPublicKey() {
+    await this.ready;
+
+    return this.key;
+  }
+
+  async equals(node: Node) {
     await this.ready;
 
     if (node.name !== this.name) return false;
@@ -87,6 +109,7 @@ class Node {
       timeout: GET_TOPOLOGY_TIMEOUT
     });
     const { signature, packed_data: packed } = resp;
+    if (!this.key) throw new Error("node initialization failed (key is undefined)");
     const isVerified = await this.key.verifyExtended(signature, packed);
 
     if (!isVerified) throw new Error("node signature mismatch");
@@ -95,5 +118,3 @@ class Node {
     return boss.load(packed);
   }
 }
-
-module.exports = Node;

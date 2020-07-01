@@ -1,9 +1,14 @@
-const Node = require('./node');
+import { Node, NodeInfo } from './node';
 
-const randomIndex = (arrayLength) => ~~(arrayLength * Math.random());
+const randomIndex = (arrayLength: number) => ~~(arrayLength * Math.random());
 
-class Topology {
-  constructor(nodes, updatedAt) {
+type NodeDictionary = { [id: string]: Node };
+
+export default class Topology {
+  nodes: NodeDictionary;
+  updatedAt: Date;
+
+  constructor(nodes: NodeDictionary, updatedAt: Date) {
     this.nodes = nodes;
     this.updatedAt = updatedAt;
   }
@@ -11,13 +16,20 @@ class Topology {
   async update() {
     const trustLevel = 0.4;
     const self = this;
-    const confirmed = {};
-    const failed = {};
-    const stats = {};
+    const confirmed: { [id: string]: any } = {};
+    const failed: { [id: string]: boolean } = {};
 
-    async function addStats(nodes) {
+    interface NodeCount {
+      count: number,
+      node: Node
+    };
+
+    const stats: { [id: string]: Array<NodeCount> } = {};
+
+    async function addStats(nodes: Array<Node>) {
       const queue = nodes.map(async (node) => {
         const nodeId = await node.getId();
+        if (!nodeId) return;
 
         if (!stats[nodeId]) stats[nodeId] = [];
 
@@ -31,15 +43,15 @@ class Topology {
         });
 
         return Promise.all(queue).then(() => {
-          if (!found) stats[node.id].push({ count: 1, node });
+          if (!found) stats[nodeId].push({ count: 1, node });
         });
       });
 
       return Promise.all(queue);
     }
 
-    function buildFinal({ trustLevel }) {
-      const nodes = {};
+    function buildFinal(trustLevel: number) {
+      const nodes: { [id: string]: Node } = {};
 
       for (var id in stats) {
         let total = 0;
@@ -64,7 +76,7 @@ class Topology {
       return nodes;
     }
 
-    function colloquium(trustLevel, nodesToAsk) {
+    function colloquium(trustLevel: number, nodesToAsk?: NodeDictionary) {
       return new Promise((resolve, reject) => {
         let Nt = Math.ceil(self.size() * trustLevel);
         if (Nt < 1) Nt = 1;
@@ -79,7 +91,7 @@ class Topology {
           resolve({ failed, confirmed });
         }
 
-        function failure(err) {
+        function failure(err: Error) {
           if (resultFound) return;
 
           resultFound = true;
@@ -87,12 +99,13 @@ class Topology {
         }
 
         function processNext() {
-          if(!resultFound && ids.length > 0) {
-            processNode(ids.pop());
-          }
+          if (resultFound) return;
+
+          const id = ids.pop();
+          id && processNode(id);
         }
 
-        async function processNode(id) {
+        async function processNode(id: string) {
           if (resultFound) return;
 
           try {
@@ -106,18 +119,23 @@ class Topology {
           }
         }
 
-        async function processResponse(id, resp) {
+        async function processResponse(id: string, resp: any) {
           if (resultFound) return;
 
           confirmed[id] = resp;
           delete failed[id];
 
-          await addStats(resp.nodes.map(info => new Node(info)));
+          const responseNodes: Array<NodeInfo> = resp.nodes;
+
+          await addStats(responseNodes.map(info => new Node(info)));
 
           if (Object.keys(confirmed).length >= Nt) success();
         }
 
-        for (var i = 0; i < Nt; i++) processNode(ids.pop());
+        for (var i = 0; i < Nt; i++) {
+          const idToProcess = ids.pop();
+          idToProcess && processNode(idToProcess);
+        }
       });
     }
 
@@ -125,13 +143,13 @@ class Topology {
       await colloquium(0.4);
     } catch(err) {
 
-      const tempResult = buildFinal({ trustLevel: 0 });
+      const tempResult = buildFinal(0);
       for (var id in tempResult) if (!failed[id]) delete tempResult[id];
 
       await colloquium(0.4, tempResult);
     }
 
-    this.nodes = buildFinal({ trustLevel: 0.9 });
+    this.nodes = buildFinal(0.9);
     this.updatedAt = new Date();
   }
 
@@ -141,9 +159,11 @@ class Topology {
     const list = [];
     for (var id in this.nodes) list.push(this.nodes[id].info());
 
+    const updatedSec = (this.updatedAt.getTime()/1000).toString();
+
     return {
       list,
-      updated: parseInt(this.updatedAt.getTime()/1000)
+      updated: parseInt(updatedSec)
     };
   }
 
@@ -156,26 +176,26 @@ class Topology {
     return ids[randomIndex(ids.length)];
   }
 
-  getNode(id) {
+  getNode(id: string) {
     return this.nodes[id];
   }
+
+  static async load(packed: any) {
+    const nodes: { [id: string]: Node } = {};
+    const list: Array<NodeInfo> = packed.list;
+
+    const queue = list.map(async (info) => {
+      const node = new Node(info);
+      const nodeId = await node.getId();
+      if (!nodeId) throw new Error("invalid node");
+      nodes[nodeId] = node;
+    });
+
+    return Promise.all(queue).then(() => {
+      return new Topology(
+        nodes,
+        new Date(packed.updated * 1000)
+      );
+    });
+  }
 }
-
-Topology.load = async (packed) => {
-  const nodes = {};
-
-  const queue = packed.list.map(async (info) => {
-    const node = new Node(info);
-    const nodeId = await node.getId();
-    nodes[nodeId] = node;
-  });
-
-  return Promise.all(queue).then(() => {
-    return new Topology(
-      nodes,
-      new Date(packed.updated * 1000)
-    );
-  });
-}
-
-module.exports = Topology;
