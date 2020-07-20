@@ -1,5 +1,16 @@
-export abstract class Role {
-  constructor() {}
+import { KeyAddress, PublicKey } from 'unicrypto';
 
-  // abstract static fromRaw(raw: any): Role;
+export type RoleDictionary = { [roleName: string]: Role };
+
+export abstract class Role {
+  name: string;
+
+  resolve(roles: RoleDictionary, nestedLevel: number = 0): Role;
+  availableFor(options: AvailableForOptions): Promise<boolean>;
+}
+
+export interface AvailableForOptions {
+  keys?: Array<PublicKey>,
+  addresses?: Array<KeyAddress>,
+  roles?: RoleDictionary
 }

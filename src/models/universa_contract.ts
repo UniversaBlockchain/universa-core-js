@@ -1,9 +1,9 @@
 import { Boss } from 'unicrypto';
-import { Role } from './roles/role';
-import { RoleFactory } from './roles/role_factory';
+import { Role } from './roles/role';
+// import { RoleFactory } from './roles/role_factory';
 import HashId from './hash_id';
-
-type RoleDictionary = { [roleName: string]: Role };
+import { RoleDictionary } from './roles/role';
+import Permission from './permissions/permission';
 
 interface State {
   createdAt: Date,
@@ -23,7 +23,7 @@ interface Definition {
   issuer: Role,
   createdAt: Date,
   data: any,
-  // permissions: Array<Permission>
+  permissions: { [id: string]: Permission }
 }
 
 export default class UniversaContract {
@@ -42,19 +42,19 @@ export default class UniversaContract {
 
     this.definition = {
       createdAt: rawDefinition['created_at'],
-      issuer: RoleFactory.load(rawDefinition.issuer),
+      issuer: rawDefinition.issuer,
       data: rawDefinition.data,
-      // permissions: rawDefinition.permissions
+      permissions: rawDefinition.permissions
     };
 
     this.state = {
       createdAt: rawState['created_at'],
       expiresAt: rawState['expires_at'],
-      owner: RoleFactory.load(rawState.owner),
-      creator: RoleFactory.load(rawState['created_by']),
+      owner: rawState.owner,
+      creator: rawState['created_by'],
       data: rawState.data,
       revision: rawState.revision,
-      roles: loadRoles(stateRoles),
+      roles: stateRoles,
       parent: rawState.parent ? new HashId(rawState.parent) : null,
       origin: rawState.origin ? new HashId(rawState.origin) : null,
       branchId: rawState['branch_id']
@@ -64,14 +64,4 @@ export default class UniversaContract {
   get owner() { return this.state.owner; }
   get issuer() { return this.definition.issuer; }
   get creator() { return this.state.creator; }
-}
-
-function loadRoles(rolesDict: any) {
-  const roles: RoleDictionary = {};
-
-  for (var roleName in rolesDict) {
-    roles[roleName] = RoleFactory.load(rolesDict[roleName]);
-  }
-
-  return roles;
 }

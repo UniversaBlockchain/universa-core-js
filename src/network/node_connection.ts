@@ -27,7 +27,6 @@ export default class NodeConnection {
   async connect() {
     const url = this.node.https;
     const clientNonce = randomBytes(47);
-    const boss = new Boss();
     const signatureOpts: PrivateKeySignOpts = { pssHash: "sha512" };
 
     console.log(`setting up protected connection to ${url}`);
@@ -41,7 +40,7 @@ export default class NodeConnection {
 
     this.sessionId = connectionData['session_id'];
 
-    const authData = boss.dump({
+    const authData = Boss.dump({
       client_nonce: clientNonce,
       server_nonce: connectionData['server_nonce']
     });
@@ -63,14 +62,14 @@ export default class NodeConnection {
 
     if (!isVerified) throw new Error("bad node signature");
 
-    const params = boss.load(tokenData);
+    const params = Boss.load(tokenData);
 
     if (encode64(clientNonce) !== encode64(params['client_nonce']))
       throw new Error("nonce mismatch, authentication failed");
 
     const decryptedTokenBin = await this.authKey.decrypt(params['encrypted_token']);
 
-    const decryptedToken = boss.load(decryptedTokenBin);
+    const decryptedToken = Boss.load(decryptedTokenBin);
 
     this.sessionKey = new SymmetricKey({ keyBytes: decryptedToken.sk });
 
@@ -88,8 +87,7 @@ export default class NodeConnection {
     if (!this.sessionKey) throw new Error("not in session");
 
     const sk = this.sessionKey;
-    const boss = new Boss();
-    const data = boss.dump({ command: name, params });
+    const data = Boss.dump({ command: name, params });
 
     const req = this.request("command", {
       command: "command",
@@ -100,7 +98,7 @@ export default class NodeConnection {
     return abortable(new Promise((resolve, reject) => {
       req.then(async (response: any) => {
         const decrypted = await sk.decrypt(response.result);
-        const result = boss.load(decrypted);
+        const result = Boss.load(decrypted);
         if (result.error) reject(result.error);
         else resolve(result.result);
       }).catch(reject);
@@ -109,8 +107,7 @@ export default class NodeConnection {
 
   request(path: string, params: any = {}, requestOptions: any = {}) {
     const url = `${this.node.https}/${path}`;
-    const boss = new Boss();
-    const data = { requestData64: encode64(boss.dump(params)) };
+    const data = { requestData64: encode64(Boss.dump(params)) };
 
     return NodeConnection.request("POST", url, { data, ...requestOptions });
   }
@@ -122,8 +119,7 @@ export default class NodeConnection {
       function onResponse(err: Error, data: any) {
         if (err) return reject(err);
 
-        const boss = new Boss();
-        const answer = boss.load(new Uint8Array(data));
+        const answer = Boss.load(new Uint8Array(data));
 
         if (answer && answer.result === "ok") resolve(answer.response);
         else reject(answer);

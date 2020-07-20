@@ -1,8 +1,8 @@
 import { Boss } from 'unicrypto';
-import { Capsule } from './capsule';
+import Capsule from './capsule';
 import HashId from './hash_id';
 
-export class Contract {
+export default class Contract {
   bin: Uint8Array;
   version: number;
   type: string;
@@ -11,8 +11,7 @@ export class Contract {
   capsule: Capsule;
 
   constructor(bin: Uint8Array) {
-    const boss = new Boss();
-    const raw = boss.load(bin);
+    const raw = Boss.load(bin);
 
     this.bin = bin;
     this.version = raw.version;
@@ -32,5 +31,5 @@ export class Contract {
   get definition() { return this.capsule.contract.definition; }
   get state() {return this.capsule.contract.state; }
 
-  get hashId() { return HashId.calculate(this.bin); }
+  hashId() { return HashId.calculate(this.bin); }
 }

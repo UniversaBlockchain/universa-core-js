@@ -1,19 +1,19 @@
 import { Boss } from 'unicrypto';
-import { Contract } from './contract';
+import Contract from './contract';
 import HashId from './hash_id';
 
-type ItemRegistry = { [hashId: string]: Contract }
+type ItemRegistry = { [hashId: string]: Contract };
 
-export class TransactionPack {
+export default class TransactionPack {
   contract: Contract;
   subItems: Array<Contract>;
   referencedItems: Array<Contract>;
   items: ItemRegistry;
+  ready: Promise<void>;
 
   constructor(bin: Uint8Array) {
     const self = this;
-    const boss = new Boss();
-    const raw = boss.load(bin);
+    const raw = Boss.load(bin);
     this.contract = new Contract(raw.contract);
     this.items = {};
     this.subItems = loadReferences(raw.subItems);
@@ -21,12 +21,22 @@ export class TransactionPack {
     this.subItems.map(index);
     this.referencedItems.map(index);
 
-    function index(contract: Contract) {
-      self.items[contract.hashId.base64] = contract;
+    async function index(contract: Contract) {
+      const hashId = await contract.hashId();
+      self.items[hashId.base64] = contract;
     }
+
+    this.ready = new Promise((resolve, reject) => {
+      const subLoaders = self.subItems.map(index);
+      const referencedLoaders = self.referencedItems.map(index);
+
+      Promise.all(subLoaders.concat(referencedLoaders)).then(() => resolve());
+    });
   }
 
-  getItem(hashId: HashId) {
+  async getItem(hashId: HashId) {
+    await this.ready;
+
     return this.items[hashId.base64];
   }
 }

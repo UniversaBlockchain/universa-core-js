@@ -1,4 +1,5 @@
 export * from 'unicrypto';
+export * from './models';
 import Network from './network';
 import { Node } from './network/node';
 import Topology from './network/topology';
@@ -8,5 +9,4 @@ export {
   Network,
   Topology
 };
-// export * from './network/index';
-// export * from './models';
+

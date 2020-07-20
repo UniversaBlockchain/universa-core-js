@@ -114,7 +114,6 @@ export class Node {
 
     if (!isVerified) throw new Error("node signature mismatch");
 
-    const boss = new Boss();
-    return boss.load(packed);
+    return Boss.load(packed);
   }
 }

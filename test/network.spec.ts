@@ -3,15 +3,19 @@ import chai from 'chai';
 import {
   Node,
   Network,
-  Topology
-} from '../src/index';
-
-import {
+  Topology,
   encode64,
   decode64,
   PrivateKey,
   PublicKey
-} from 'unicrypto';
+} from '../src/index';
+
+// import {
+//   encode64,
+//   decode64,
+//   PrivateKey,
+//   PublicKey
+// } from 'unicrypto';
 
 const should = chai.should();
 

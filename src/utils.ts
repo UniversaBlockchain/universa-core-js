@@ -1,5 +1,10 @@
 const fs = require('fs');
 
+import { PublicKey, KeyAddress } from 'unicrypto';
+
+export type Primitive = string | number | Date | null | undefined;
+export type Dict = { [key: string]: Primitive | Dict };
+
 export interface RetryOptions {
   attempts?: number,
   interval?: number,
@@ -77,4 +82,43 @@ export function readJSON(path: string) {
       else resolve(JSON.parse(data));
     });
   });
+}
+
+export function isSuperset(set: Set<string>, subset: Set<string>) {
+  // FIXME: Set is not defined properly in TS
+  for (var elem of Array.from(subset.values())) {
+    if (!set.has(elem)) {
+        return false;
+    }
+  }
+
+  return true;
+}
+
+export function createAddressSet(
+  keys: Array<PublicKey> = [],
+  addresses: Array<KeyAddress> = []
+) {
+  const addrs: Set<string> = new Set();
+
+  keys.forEach(key => {
+    addrs.add(key.shortAddress.base58);
+    addrs.add(key.longAddress.base58);
+  });
+
+  addresses.forEach(addr => addrs.add(addr.base58));
+
+  return addrs;
+}
+
+export function omitBOSS(serialized: any, fields: Array<string>) {
+  if (typeof serialized !== "object" || !serialized) return serialized;
+
+  const cleaned = Object.assign({}, serialized);
+  delete cleaned['__t'];
+  delete cleaned['__type'];
+
+  fields.forEach(field => delete cleaned[field]);
+
+  return cleaned;
 }

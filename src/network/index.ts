@@ -56,9 +56,7 @@ export default class Network {
       const bin = localStorage.getItem(this.topologyKey);
 
       if (bin) {
-        const boss = new Boss();
-
-        return Topology.load(boss.load(decode64(bin)));
+        return Topology.load(Boss.load(decode64(bin)));
       }
     }
 
@@ -75,10 +73,9 @@ export default class Network {
   saveNewTopology() {
     if (typeof window === 'undefined') return;
 
-    const boss = new Boss();
     if (!this.topology) throw new Error("Can't save undefined topology");
     const packed = this.topology.pack();
-    localStorage.setItem(this.topologyKey, encode64(boss.dump(packed)));
+    localStorage.setItem(this.topologyKey, encode64(Boss.dump(packed)));
   }
 
   async connect() {
