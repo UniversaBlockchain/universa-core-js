@@ -8,6 +8,11 @@ import {
 
 import { Role, AvailableForOptions, RoleDictionary } from './role';
 
+interface RoleLinkSerialized {
+  name: string,
+  target_name: string
+}
+
 export default class RoleLink implements Role, BossSerializable {
   name: string;
   targetName: string;
@@ -33,6 +38,8 @@ export default class RoleLink implements Role, BossSerializable {
     return finalTarget.availableFor(options);
   }
 
+  // BOSS serialization definitions
+
   static className = "RoleLink";
 
   serializeToBOSS() {
@@ -42,7 +49,7 @@ export default class RoleLink implements Role, BossSerializable {
     };
   }
 
-  static deserializeFromBOSS(serialized: any): RoleLink {
+  static deserializeFromBOSS(serialized: RoleLinkSerialized): RoleLink {
     return new RoleLink(serialized.name, serialized['target_name']);
   }
 }
