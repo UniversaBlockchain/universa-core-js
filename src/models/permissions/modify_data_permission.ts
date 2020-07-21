@@ -4,12 +4,17 @@ import RoleLink from '../roles/role_link';
 import Permission from './permission';
 import { omitBOSS } from '../../utils';
 
+type ModifyPrimitive = null | string | number | Date;
+
 interface ModifyDataPermissionParams {
-  fields: { [key: string]: any }
+  fields: { [key: string]: Array<ModifyPrimitive> }
 }
 
 export default class ModifyDataPermission extends Permission implements BossSerializable {
   params: ModifyDataPermissionParams;
+
+  static className = "ModifyDataPermission";
+  static DefaultName = "modify_data";
 
   constructor(
     role: Role,
@@ -26,9 +31,6 @@ export default class ModifyDataPermission extends Permission implements BossSeri
   ) {
     return this.createLink(roleName, params, name);
   }
-
-  static className = "ModifyDataPermission";
-  static DefaultName = "modify_data";
 
   static deserializeFromBOSS(serialized: any): ModifyDataPermission {
     const params = omitBOSS(serialized, ['role', 'name']);

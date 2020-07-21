@@ -14,6 +14,9 @@ interface SplitJoinPermissionParams {
 export default class SplitJoinPermission extends Permission implements BossSerializable {
   params: SplitJoinPermissionParams;
 
+  static className = "SplitJoinPermission";
+  static DefaultName = "split_join";
+
   constructor(
     role: Role,
     params: ChangeNumberOptions,
@@ -29,9 +32,6 @@ export default class SplitJoinPermission extends Permission implements BossSeria
   ) {
     return this.createLink(roleName, params, name);
   }
-
-  static className = "SplitJoinPermission";
-  static DefaultName = "split_join";
 
   static deserializeFromBOSS(serialized: any): SplitJoinPermission {
     const params = omitBOSS(serialized, ['role', 'name']);

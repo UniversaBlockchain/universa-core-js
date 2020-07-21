@@ -16,6 +16,6 @@ describe('Contract', () => {
   it('should read role', async () => {
     const tpack = new TransactionPack(pack1BIN);
     const contract = tpack.contract;
-    console.log(contract);
+    // console.log(contract);
   });
 });

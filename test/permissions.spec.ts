@@ -20,7 +20,7 @@ const KEY_BIN = decode64("JgAcAQABvIEAxIA1enr/js+6wCO5AfidA7cxOAGF6un36HGCAlv8Wi
 
 describe('Permissions', () => {
   describe('RevokePermission', () => {
-    it.only('should pack permission', async () => {
+    it('should pack permission', async () => {
       const permission = RevokePermission.create("owner");
 
       console.log(permission);

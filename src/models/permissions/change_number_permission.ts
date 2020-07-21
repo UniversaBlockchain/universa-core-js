@@ -5,7 +5,7 @@ import Permission from './permission';
 import { omitBOSS } from '../../utils';
 
 interface ChangeNumberParams {
-  field_name?: string,
+  field_name: string,
   min_value?: string | number,
   min_step?: string | number,
   max_value?: string | number,
@@ -14,6 +14,9 @@ interface ChangeNumberParams {
 
 export default class ChangeNumberPermission extends Permission implements BossSerializable {
   params: ChangeNumberParams;
+
+  static className = "ChangeNumberPermission";
+  static DefaultName = "decrement_permission";
 
   constructor(
     role: Role,
@@ -30,9 +33,6 @@ export default class ChangeNumberPermission extends Permission implements BossSe
   ) {
     return this.createLink(roleName, params, name);
   }
-
-  static className = "ChangeNumberPermission";
-  static DefaultName = "decrement_permission";
 
   static deserializeFromBOSS(serialized: any): ChangeNumberPermission {
     const params = omitBOSS(serialized, ['role', 'name']);
