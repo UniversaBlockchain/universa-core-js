@@ -6,27 +6,29 @@ import { omitBOSS } from '../../utils';
 
 type ModifyPrimitive = null | string | number | Date;
 
-interface ModifyDataPermissionParams {
+interface ModifyDataParams {
   fields: { [key: string]: Array<ModifyPrimitive> }
 }
 
 export default class ModifyDataPermission extends Permission implements BossSerializable {
-  params: ModifyDataPermissionParams;
+  params: ModifyDataParams;
 
   static className = "ModifyDataPermission";
   static DefaultName = "modify_data";
 
   constructor(
     role: Role,
-    params: ChangeNumberOptions,
+    params: ModifyDataParams,
     name: string = ModifyDataPermission.DefaultName
   ) {
     super(role, params, name);
+
+    this.params = params;
   }
 
   static create(
     roleName: string,
-    params: ChangeNumberOptions,
+    params: ModifyDataParams,
     name: string = ModifyDataPermission.DefaultName
   ) {
     return this.createLink(roleName, params, name);

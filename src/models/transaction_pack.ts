@@ -1,29 +1,46 @@
-import { Boss } from 'unicrypto';
+import { Boss, BossSerializable } from 'unicrypto';
 import Contract from './contract';
 import HashId from './hash_id';
 
 type ItemRegistry = { [hashId: string]: Contract };
 
-export default class TransactionPack {
+interface TransactionPackOptions {
+  subItems: Array<Uint8Array>,
+  referencedItems: Array<Uint8Array>
+}
+
+export default class TransactionPack implements BossSerializable {
   contract: Contract;
-  subItems: Array<Contract>;
-  referencedItems: Array<Contract>;
+  subItems: Array<Contract> = [];
+  referencedItems: Array<Contract> = [];
   items: ItemRegistry;
   ready: Promise<void>;
 
-  constructor(bin: Uint8Array) {
+  contractPacked: Uint8Array;
+  subItemsPacked: Array<Uint8Array> = [];
+  referencedItemsPacked: Array<Uint8Array> = [];
+
+  constructor(contractPacked: Uint8Array, options?: TransactionPackOptions) {
+    this.contractPacked = contractPacked;
+
+    if (options) {
+      this.subItemsPacked = options.subItems || [];
+      this.referencedItemsPacked = options.referencedItems || [];
+    }
+
+    this.contract = Contract.unpack(contractPacked);
+    this.subItems = this.subItemsPacked.map(packed => Contract.unpack(packed));
+    this.referencedItems = this.referencedItemsPacked.map(
+      packed => Contract.unpack(packed)
+    );
+
     const self = this;
-    const raw = Boss.load(bin);
-    this.contract = new Contract(raw.contract);
     this.items = {};
-    this.subItems = loadReferences(raw.subItems);
-    this.referencedItems = loadReferences(raw.referencedItems);
-    this.subItems.map(index);
-    this.referencedItems.map(index);
 
     async function index(contract: Contract) {
       const hashId = await contract.hashId();
-      self.items[hashId.base64] = contract;
+
+      if (hashId) self.items[hashId.base64] = contract;
     }
 
     this.ready = new Promise((resolve, reject) => {
@@ -39,7 +56,26 @@ export default class TransactionPack {
 
     return this.items[hashId.base64];
   }
+
+  static className = "TransactionPack";
+
+  serializeToBOSS() {
+    return {
+      contract: this.contractPacked,
+      subItems: this.subItemsPacked,
+      referencedItems: this.referencedItemsPacked
+    }
+  }
+
+  static deserializeFromBOSS(serialized: any) {
+    return new TransactionPack(serialized.contract, {
+      subItems: serialized.subItems || [],
+      referencedItems: serialized.referencedItems || []
+    });
+  }
 }
+
+Boss.register("TransactionPack", TransactionPack);
 
 function loadReferences(refs: Array<Uint8Array> | null) {
   return (refs || []).map(bin => new Contract(bin));

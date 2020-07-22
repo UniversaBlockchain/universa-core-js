@@ -1,3 +1,4 @@
+import UniversaContract from './universa_contract';
 import Capsule from './capsule';
 import Contract from './contract';
 import TransactionPack from './transaction_pack';
@@ -10,16 +11,29 @@ import RoleList from './roles/role_list';
 import { RoleDictionary } from './roles/role';
 
 import RevokePermission from './permissions/revoke_permission';
+import ChangeOwnerPermission from './permissions/change_owner_permission';
+import ModifyDataPermission from './permissions/modify_data_permission';
+import ChangeNumberPermission from './permissions/change_number_permission';
+import SplitJoinPermission from './permissions/split_join_permission';
 
 export {
+  UniversaContract,
   Capsule,
   Contract,
   TransactionPack,
+
   HashId,
+
   RoleDictionary,
   RoleSimple,
   RoleLink,
   RoleList,
+
   KeyRecord,
-  RevokePermission
+
+  RevokePermission,
+  ChangeOwnerPermission,
+  ModifyDataPermission,
+  ChangeNumberPermission,
+  SplitJoinPermission
 };

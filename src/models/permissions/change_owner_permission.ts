@@ -15,7 +15,7 @@ export default class ChangeOwnerPermission extends Permission implements BossSer
   }
 
   static deserializeFromBOSS(serialized: any): ChangeOwnerPermission {
-    return new ChangeOwnerPermission(serialized.name, serialized.role);
+    return new ChangeOwnerPermission(serialized.role, serialized.name);
   }
 }
 

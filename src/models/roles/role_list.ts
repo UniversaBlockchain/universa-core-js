@@ -99,4 +99,4 @@ export default class RoleList implements Role, BossSerializable {
   }
 }
 
-Boss.register("RoleList", RoleList as BossDeserializable<RoleList>);
+Boss.register("RoleList", RoleList);

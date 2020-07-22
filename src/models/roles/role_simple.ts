@@ -62,4 +62,4 @@ export default class RoleSimple implements Role, BossSerializable {
   }
 }
 
-Boss.register("SimpleRole", RoleSimple as BossDeserializable<RoleSimple>);
+Boss.register("SimpleRole", RoleSimple);

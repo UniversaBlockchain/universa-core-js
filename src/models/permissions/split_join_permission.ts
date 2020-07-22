@@ -4,7 +4,7 @@ import RoleLink from '../roles/role_link';
 import Permission from './permission';
 import { omitBOSS } from '../../utils';
 
-interface SplitJoinPermissionParams {
+interface SplitJoinParams {
   field_name: string,
   min_value?: string | number,
   min_unit?: string | number,
@@ -12,22 +12,24 @@ interface SplitJoinPermissionParams {
 }
 
 export default class SplitJoinPermission extends Permission implements BossSerializable {
-  params: SplitJoinPermissionParams;
+  params: SplitJoinParams;
 
   static className = "SplitJoinPermission";
   static DefaultName = "split_join";
 
   constructor(
     role: Role,
-    params: ChangeNumberOptions,
+    params: SplitJoinParams,
     name: string = SplitJoinPermission.DefaultName
   ) {
     super(role, params, name);
+
+    this.params = params;
   }
 
   static create(
     roleName: string,
-    params: ChangeNumberOptions,
+    params: SplitJoinParams,
     name: string = SplitJoinPermission.DefaultName
   ) {
     return this.createLink(roleName, params, name);
@@ -39,3 +41,5 @@ export default class SplitJoinPermission extends Permission implements BossSeria
     return new SplitJoinPermission(serialized.role, params, serialized.name);
   }
 }
+
+Boss.register("SplitJoinPermission", SplitJoinPermission);

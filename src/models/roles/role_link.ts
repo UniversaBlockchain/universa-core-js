@@ -54,4 +54,4 @@ export default class RoleLink implements Role, BossSerializable {
   }
 }
 
-Boss.register("RoleLink", RoleLink as BossDeserializable<RoleLink>);
+Boss.register("RoleLink", RoleLink);

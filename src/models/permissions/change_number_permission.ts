@@ -20,15 +20,17 @@ export default class ChangeNumberPermission extends Permission implements BossSe
 
   constructor(
     role: Role,
-    params: ChangeNumberOptions,
+    params: ChangeNumberParams,
     name: string = ChangeNumberPermission.DefaultName
   ) {
     super(role, params, name);
+
+    this.params = params;
   }
 
   static create(
     roleName: string,
-    params: ChangeNumberOptions,
+    params: ChangeNumberParams,
     name: string = ChangeNumberPermission.DefaultName
   ) {
     return this.createLink(roleName, params, name);

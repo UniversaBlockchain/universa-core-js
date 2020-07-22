@@ -53,4 +53,4 @@ export default class KeyRecord implements BossSerializable {
   }
 }
 
-Boss.register("KeyRecord", KeyRecord as BossDeserializable<KeyRecord>);
+Boss.register("KeyRecord", KeyRecord);

@@ -15,7 +15,7 @@ export default class RevokePermission extends Permission implements BossSerializ
   }
 
   static deserializeFromBOSS(serialized: any): RevokePermission {
-    return new RevokePermission(serialized.name, serialized.role);
+    return new RevokePermission(serialized.role, serialized.name);
   }
 }
 
