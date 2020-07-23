@@ -42,14 +42,14 @@ export function abortable(responsePromise: Promise<any>, request: any) {
   return cancelable(responsePromise, () => { request && request.abort(); });
 }
 
-class Canceled extends Error {
+export class Canceled extends Error {
   constructor(reason: string = "") {
     super(reason);
     Object.setPrototypeOf(this, Canceled.prototype);
   }
 }
 
-interface Cancelable<T> extends Promise<T> {
+export interface Cancelable<T> extends Promise<T> {
   cancel(): Cancelable<T>;
 }
 

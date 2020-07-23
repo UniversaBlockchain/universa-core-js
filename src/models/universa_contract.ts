@@ -4,7 +4,7 @@ import HashId from './hash_id';
 import { RoleDictionary } from './roles/role';
 import Permission from './permissions/permission';
 
-interface State {
+export interface State {
   createdAt: Date,
   expiresAt: Date,
   owner: Role,
@@ -18,7 +18,7 @@ interface State {
   // references: Array[Reference] | null
 }
 
-interface Definition {
+export interface Definition {
   issuer: Role,
   permissions: { [id: string]: Permission },
   createdAt: Date,
@@ -31,7 +31,7 @@ interface UniversaContractSerialized {
   state: any
 }
 
-export default class UniversaContract implements BossSerializable {
+export class UniversaContract implements BossSerializable {
   apiLevel: number;
   definition: Definition;
   state: State;

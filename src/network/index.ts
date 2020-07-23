@@ -1,7 +1,7 @@
 import request from 'xhr-request';
 import { Node } from './node';
 import Topology from './topology';
-import { retry, abortable, readJSON } from '../utils';
+import { retry, abortable, readJSON, Cancelable } from '../utils';
 import NodeConnection from './node_connection';
 
 const mainnet = require('../../mainnet.json');
@@ -179,7 +179,7 @@ export default class Network {
 
       let positive = 0;
       let negative = 0;
-      const requests = [];
+      const requests: Array<Cancelable<any>> = [];
       if (!self.topology) throw new Error("missing topology");
       const ids = Object.keys(self.topology.nodes);
 

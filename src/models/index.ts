@@ -1,4 +1,4 @@
-import UniversaContract from './universa_contract';
+export * from './universa_contract';
 import Capsule from './capsule';
 import Contract from './contract';
 import TransactionPack from './transaction_pack';
@@ -17,7 +17,6 @@ import ChangeNumberPermission from './permissions/change_number_permission';
 import SplitJoinPermission from './permissions/split_join_permission';
 
 export {
-  UniversaContract,
   Capsule,
   Contract,
   TransactionPack,

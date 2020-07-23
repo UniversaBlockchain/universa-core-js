@@ -1,6 +1,6 @@
 import { Boss } from 'unicrypto';
 import { Role } from './roles/role';
-import UniversaContract from './universa_contract';
+import { UniversaContract } from './universa_contract';
 import HashId from './hash_id';
 
 interface CapsuleOptions {

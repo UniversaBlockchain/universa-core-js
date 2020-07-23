@@ -34,13 +34,14 @@ npm install
 npm run build
 ```
 
-In folder `dist` there will be `uni.min.js`.
+In folder `dist` there will be `uni.min.js` and `crypto.%version%.wasm`.
 
-Simply copy `dist/uni.min.js` to wherever you keep your vendor scripts and include
+Simply copy two files to wherever you keep your vendor scripts and include
 it as a script:
 
 ```html
 <script src="path/to/uni.min.js"></script>
+<script> const generator = Uni.PrivateKey.generate({ strength: 2048 }); </script>
 ```
 
 ## Contract
@@ -62,6 +63,14 @@ record.extra.comment === "this is key record"; // true
 ```
 
 ### Roles
+
+#### Availability for keys/addresses
+
+```js
+const isAvailable1 = await role.availableFor({ keys: [publicKey] });
+const isAvailable2 = await role.availableFor({ addresses: [publicKey.shortAddress] });
+```
+
 #### Simple Role
 Simple role can be created both with addresses and public keys
 ```js
@@ -260,6 +269,38 @@ const splitJoin2 = SplitJoinPermission.create("admin", params);
 console.log(splitJoin.params); // params
 ```
 
+### Transaction Pack
+
+Load transaction pack from binary
+```js
+import { TransactionPack, Boss } from 'universa-core';
+
+const tpackBinary: Uint8Array;
+const tpack = Boss.load(tpackBinary) as TransactionPack;
+
+tpack.contract // Contract
+tpack.referencedItems // Array<Contract>
+tpack.subItems // Array<Contract>
+
+// Get parent of main contract
+const parent = await tpack.getItem(tpack.contract.parent);
+```
+
+### Contract
+
+```js
+const main = tpack.contract;
+
+main.issuer // issuer role
+main.owner // owner role
+main.creator // creator role
+
+main.parent // hash id of parent contract
+main.origin // hash id of origin contract
+
+main.definition // definition
+main.state // state
+```
 
 ## Network
 

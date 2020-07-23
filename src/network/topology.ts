@@ -156,7 +156,7 @@ export default class Topology {
   size() { return Object.keys(this.nodes).length; }
 
   pack() {
-    const list = [];
+    const list: Array<any> = [];
     for (var id in this.nodes) list.push(this.nodes[id].info());
 
     const updatedSec = (this.updatedAt.getTime()/1000).toString();
