@@ -58,7 +58,7 @@ function copyBuild(destination) {
   let root = path.dirname(require.main.filename);
   root = path.dirname(root);
 
-  gentlyCopy([`${root}/dist/uni.v${CORE_VERSION}.min.js`], `${destination}/uni.v${CORE_VERSION}.min.js`);
+  gentlyCopy([`${root}/dist/uni.min.js`], `${destination}/uni.v${CORE_VERSION}.min.js`);
   copiedBuild = true;
 }
 
@@ -73,7 +73,7 @@ function build(config) {
   });
 }
 
-console.log(webpackConfig);
+// console.log(webpackConfig);
 
 distPaths.map(distPath => {
         const relative = path.resolve(projectRoot, distPath);
