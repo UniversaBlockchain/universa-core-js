@@ -6,8 +6,7 @@
   "scripts": {
     "coverage": "nyc npm run test",
     "test": "mocha --timeout 5000 -r ts-node/register test/**/*.ts",
-    "build": "webpack",
-    "postinstall": "node ./bin/postinstall.js"
+    "build": "webpack"
   },
   "keywords": [
     "network",
