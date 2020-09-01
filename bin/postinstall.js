@@ -16,11 +16,11 @@ const gentlyCopy = require('gently-copy');
 // });
 
 // // node_modules/unicrypto/bin
-// let projectRoot = path.dirname(require.main.filename);
+let projectRoot = path.dirname(require.main.filename);
 
-// projectRoot = path.dirname(projectRoot);
-// projectRoot = path.dirname(projectRoot);
-// projectRoot = path.dirname(projectRoot);
+projectRoot = path.dirname(projectRoot);
+projectRoot = path.dirname(projectRoot);
+projectRoot = path.dirname(projectRoot);
 
 const distPaths = ['build', 'public', 'dist'];
 
