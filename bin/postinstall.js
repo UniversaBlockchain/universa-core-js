@@ -14,6 +14,7 @@ const distPaths = ['build', 'public', 'dist'];
 let copiedBuild = false;
 
 function copyBuild(destination) {
+  const CORE_VERSION = process.env.npm_package_version;
   let root = path.dirname(require.main.filename);
   root = path.dirname(root);
 
