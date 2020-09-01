@@ -1,4 +1,4 @@
-import { Boss } from 'unicrypto';
+import { Boss, KeyAddress, PublicKey } from 'unicrypto';
 import Capsule from './capsule';
 import HashId from './hash_id';
 
@@ -6,6 +6,11 @@ interface ContractOptions {
   type?: string,
   version?: number,
   originalBinary?: Uint8Array
+}
+
+interface signedByOptions {
+  address?: KeyAddress,
+  publicKey?: PublicKey
 }
 
 export default class Contract {
@@ -47,6 +52,22 @@ export default class Contract {
   hashId() {
     if (this.originalBinary) return HashId.calculate(this.originalBinary);
     else return null;
+  }
+
+  async isSignedBy(options: signedByOptions) {
+    const { publicKey, address } = options;
+    let signed = false;
+    let i = 0;
+    const signaturesTotal = this.signatures.length;
+
+    while (i < signaturesTotal && !signed) {
+      if (publicKey) publicKey.verifyExtended
+
+      i++;
+    }
+
+
+    return signed;
   }
 
   packData() {

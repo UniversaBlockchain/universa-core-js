@@ -47,8 +47,18 @@ let copiedBuild = false;
 //   copied = true;
 // }
 
+
+
+
+
+
+
+
 function copyBuild(destination) {
-  gentlyCopy([`../dist/uni.v${CORE_VERSION}.min.js`], `${destination}/uni.v${CORE_VERSION}.min.js`);
+  let root = path.dirname(require.main.filename);
+  root = path.dirname(root);
+
+  gentlyCopy([`${root}/dist/uni.v${CORE_VERSION}.min.js`], `${destination}/uni.v${CORE_VERSION}.min.js`);
   copiedBuild = true;
 }
 
@@ -63,10 +73,9 @@ function build(config) {
   });
 }
 
-build(webpackConfig)
-  .then(
-    () => {
-      distPaths.map(distPath => {
+console.log(webpackConfig);
+
+distPaths.map(distPath => {
         const relative = path.resolve(projectRoot, distPath);
 
         if (!fs.existsSync(relative)) return;
@@ -80,8 +89,26 @@ build(webpackConfig)
       });
 
       if (!copiedBuild) console.log(`WARNING: Cannot find destination directory. Please, copy node_modules/universa-core/dist/uni.v${CORE_VERSION}.min.js to your frontend public directory`);
-    },
-    (err) => console.log(`Done with errors: ${err}`)
-  );
+
+// build(webpackConfig)
+//   .then(
+//     () => {
+//       distPaths.map(distPath => {
+//         const relative = path.resolve(projectRoot, distPath);
+
+//         if (!fs.existsSync(relative)) return;
+
+//         if (distPath !== "public") return copyBuild(relative);
+
+//         const jsPath = relative + '/js';
+
+//         if (fs.existsSync(jsPath)) copyBuild(jsPath);
+//         else copyBuild(relative);
+//       });
+
+//       if (!copiedBuild) console.log(`WARNING: Cannot find destination directory. Please, copy node_modules/universa-core/dist/uni.v${CORE_VERSION}.min.js to your frontend public directory`);
+//     },
+//     (err) => console.log(`Done with errors: ${err}`)
+//   );
 
 
