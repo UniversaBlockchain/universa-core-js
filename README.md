@@ -34,7 +34,7 @@ npm install
 npm run build
 ```
 
-In folder `dist` there will be `uni.min.js` and `crypto.%version%.wasm`.
+In folder `dist` (public/js, build) there will be `uni.%version%.min.js` and `crypto.%version%.wasm`.
 
 Simply copy two files to wherever you keep your vendor scripts and include
 it as a script:
