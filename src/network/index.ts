@@ -30,6 +30,7 @@ interface NetworkOptions {
 
 interface ContractState {
   isApproved: boolean,
+  isTestnet: boolean,
   states: any
 }
 
@@ -185,6 +186,7 @@ export default class Network {
       let positive = 0;
       let negative = 0;
       let states = {};
+      let isTestnet: boolean;
 
       const requests: Array<Cancelable<any>> = [];
       if (!self.topology) throw new Error("missing topology");
@@ -200,6 +202,7 @@ export default class Network {
 
         resolve({
           isApproved: status,
+          isTestnet,
           states
         });
       }
@@ -247,7 +250,10 @@ export default class Network {
           });
           requests.push(req);
           const response = await req;
-          processVote(response.itemResult.state, nodeId);
+          const { itemResult } = response;
+          isTestnet = itemResult.isTestnet;
+
+          processVote(itemResult.state, nodeId);
         } catch (err) {
           console.log("On check contract: ", err);
           if (ids.length > 0) processNext();
