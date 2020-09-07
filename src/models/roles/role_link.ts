@@ -32,6 +32,12 @@ export default class RoleLink implements Role, BossSerializable {
     return target.resolve(roles, nestedLevel + 1);
   }
 
+  async getSimpleAddress(roles: RoleDictionary = {}, ignoreRefs = true) {
+    const target = this.resolve(roles);
+
+    return target.getSimpleAddress(roles, ignoreRefs);
+  }
+
   async availableFor(options: AvailableForOptions) {
     const finalTarget = this.resolve(options.roles);
 

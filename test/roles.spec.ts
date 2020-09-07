@@ -6,6 +6,7 @@ import {
   decode64,
   PrivateKey,
   KeyRecord,
+  KeyAddress,
   RoleSimple,
   RoleLink,
   RoleList,
@@ -48,6 +49,48 @@ describe('Roles', () => {
 
       expect(isAvailable).to.equal(true);
     });
+
+    it('should get simple address (created with address)', async () => {
+      const privateKey = await PrivateKey.unpack(KEY_BIN);
+      const pub = privateKey.publicKey;
+      const role = new RoleSimple("owner", { addresses: [pub.shortAddress] });
+
+      const address = await role.getSimpleAddress();
+
+      expect(address instanceof KeyAddress).to.equal(true);
+    });
+
+    it('should not get simple address for 2 or more keys (created with addresses)', async () => {
+      const dir1Key = await PrivateKey.unpack(decode64("JgAcAQABvIEAwOMQDlTbIQ0UFuHKV9vdxrPHkBhjVJXJ6X3Z4Vy2ZxzE91Qw7iCnafg4BOiVlowgE7MTJpvWh7dedPkF5X9GcOtbobFkQfA9l8BtBYnqfFYR7LlOz00eZ8BHCix5hXWzc6lhLdCmSUghfK8w2xdfz+ualQpziZJq+2FsQeix6e28gQC2hiPalp/AJUsb8SBGQ7T1hXJihG1luH/RuoiG+zV5gwkaqxv9Kk5vGRG9QPxAtZVuCZ8ChXYx9YtiGeSi2oH8dQmLR+5yNpVrnAnltzQYz7wJyjtEUoI54SOi6FnMuz3/9WuQCm6KNQl0W8VsFqiTqbYM2gK/50FqHHzuKvTRww=="));
+      const dir2Key = await PrivateKey.unpack(decode64("JgAcAQABvIEA4EVVJlTJCHRXWtUBC82yr1NwMLl0U6P18bnGNR+ad5Z7NKBnx4g1Mb7djzKTLaBbBKJLllw+NleQSB58Aklf7X0nrT3mymb8Tu3o/sNBnK0s36BQa+FBqodKXLA3XDNz0MbUZQFHKsVrz5ohbfLwntMwVI6NeScCiOhDPIKytu28gQC4Jj5YV3lJ83cemjPglqLPFDOGaTT4Q/mfLN3M17NmMtUJgIByrhTjb/+oDmykAaULqDIu2nj5JD44KTgct+ui1suHba6gXqFnWK9k8+hfvVECRsxUn/KdP3WTq+hpBr1qM9hXxs5sFqvI4CapkTE843ZBc+22yTqJX06bNigudQ=="));
+
+      const role = new RoleSimple("owner", { addresses: [dir1Key.publicKey.shortAddress, dir2Key.publicKey.shortAddress] });
+
+      const address = await role.getSimpleAddress();
+
+      expect(address).to.equal(null);
+    });
+
+    it('should get simple address (created with key)', async () => {
+      const privateKey = await PrivateKey.unpack(KEY_BIN);
+      const pub = privateKey.publicKey;
+      const role = new RoleSimple("owner", { keys: [pub] });
+
+      const address = await role.getSimpleAddress();
+
+      expect(address instanceof KeyAddress).to.equal(true);
+    });
+
+    it('should not get simple address for 2 or more keys (created with keys)', async () => {
+      const dir1Key = await PrivateKey.unpack(decode64("JgAcAQABvIEAwOMQDlTbIQ0UFuHKV9vdxrPHkBhjVJXJ6X3Z4Vy2ZxzE91Qw7iCnafg4BOiVlowgE7MTJpvWh7dedPkF5X9GcOtbobFkQfA9l8BtBYnqfFYR7LlOz00eZ8BHCix5hXWzc6lhLdCmSUghfK8w2xdfz+ualQpziZJq+2FsQeix6e28gQC2hiPalp/AJUsb8SBGQ7T1hXJihG1luH/RuoiG+zV5gwkaqxv9Kk5vGRG9QPxAtZVuCZ8ChXYx9YtiGeSi2oH8dQmLR+5yNpVrnAnltzQYz7wJyjtEUoI54SOi6FnMuz3/9WuQCm6KNQl0W8VsFqiTqbYM2gK/50FqHHzuKvTRww=="));
+      const dir2Key = await PrivateKey.unpack(decode64("JgAcAQABvIEA4EVVJlTJCHRXWtUBC82yr1NwMLl0U6P18bnGNR+ad5Z7NKBnx4g1Mb7djzKTLaBbBKJLllw+NleQSB58Aklf7X0nrT3mymb8Tu3o/sNBnK0s36BQa+FBqodKXLA3XDNz0MbUZQFHKsVrz5ohbfLwntMwVI6NeScCiOhDPIKytu28gQC4Jj5YV3lJ83cemjPglqLPFDOGaTT4Q/mfLN3M17NmMtUJgIByrhTjb/+oDmykAaULqDIu2nj5JD44KTgct+ui1suHba6gXqFnWK9k8+hfvVECRsxUn/KdP3WTq+hpBr1qM9hXxs5sFqvI4CapkTE843ZBc+22yTqJX06bNigudQ=="));
+
+      const role = new RoleSimple("owner", { keys: [dir1Key.publicKey, dir2Key.publicKey] });
+
+      const address = await role.getSimpleAddress();
+
+      expect(address).to.equal(null);
+    });
   });
 
   describe('RoleLink', () => {
@@ -81,6 +124,37 @@ describe('Roles', () => {
       const isAvailable = await creator.availableFor({ keys: [publicKey], roles });
 
       expect(isAvailable).to.equal(true);
+    });
+
+    it('should get simple address', async () => {
+      const privateKey = await PrivateKey.unpack(KEY_BIN);
+      const publicKey = privateKey.publicKey;
+      const owner = new RoleSimple("owner", { keys: [publicKey] });
+      const creator = new RoleLink("creator", "owner");
+      const roles = {
+        "owner": owner,
+        "creator": creator
+      };
+
+      const address = await creator.getSimpleAddress(roles);
+
+      expect(address instanceof KeyAddress).to.equal(true);
+    });
+
+    it('should not get simple address for 2 or more keys role', async () => {
+      const dir1Key = await PrivateKey.unpack(decode64("JgAcAQABvIEAwOMQDlTbIQ0UFuHKV9vdxrPHkBhjVJXJ6X3Z4Vy2ZxzE91Qw7iCnafg4BOiVlowgE7MTJpvWh7dedPkF5X9GcOtbobFkQfA9l8BtBYnqfFYR7LlOz00eZ8BHCix5hXWzc6lhLdCmSUghfK8w2xdfz+ualQpziZJq+2FsQeix6e28gQC2hiPalp/AJUsb8SBGQ7T1hXJihG1luH/RuoiG+zV5gwkaqxv9Kk5vGRG9QPxAtZVuCZ8ChXYx9YtiGeSi2oH8dQmLR+5yNpVrnAnltzQYz7wJyjtEUoI54SOi6FnMuz3/9WuQCm6KNQl0W8VsFqiTqbYM2gK/50FqHHzuKvTRww=="));
+      const dir2Key = await PrivateKey.unpack(decode64("JgAcAQABvIEA4EVVJlTJCHRXWtUBC82yr1NwMLl0U6P18bnGNR+ad5Z7NKBnx4g1Mb7djzKTLaBbBKJLllw+NleQSB58Aklf7X0nrT3mymb8Tu3o/sNBnK0s36BQa+FBqodKXLA3XDNz0MbUZQFHKsVrz5ohbfLwntMwVI6NeScCiOhDPIKytu28gQC4Jj5YV3lJ83cemjPglqLPFDOGaTT4Q/mfLN3M17NmMtUJgIByrhTjb/+oDmykAaULqDIu2nj5JD44KTgct+ui1suHba6gXqFnWK9k8+hfvVECRsxUn/KdP3WTq+hpBr1qM9hXxs5sFqvI4CapkTE843ZBc+22yTqJX06bNigudQ=="));
+
+      const owner = new RoleSimple("owner", { keys: [dir1Key.publicKey, dir2Key.publicKey] });
+      const creator = new RoleLink("creator", "owner");
+      const roles = {
+        "owner": owner,
+        "creator": creator
+      };
+
+      const address = await creator.getSimpleAddress(roles);
+
+      expect(address).to.equal(null);
     });
 
     it('should throw exception on circular role', async () => {
@@ -173,7 +247,7 @@ describe('Roles', () => {
       expect(isAvailable).to.equal(false);
     });
 
-    it('should be available in QURUM=3 mode', async() => {
+    it('should be available in QUORUM=3 mode', async() => {
       const list = new RoleList("owner", {
         mode: RoleList.MODES.QUORUM,
         quorumSize: 3,
@@ -188,7 +262,7 @@ describe('Roles', () => {
       expect(isAvailable).to.equal(true);
     });
 
-    it('should not be available in QURUM=3 mode without one key', async() => {
+    it('should not be available in QUORUM=3 mode without one key', async() => {
       const list = new RoleList("owner", {
         mode: RoleList.MODES.QUORUM,
         quorumSize: 3,

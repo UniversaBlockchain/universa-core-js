@@ -55,6 +55,13 @@ export default class RoleList implements Role, BossSerializable {
     });
   }
 
+  async getSimpleAddress(roles: RoleDictionary = {}, ignoreRefs = true) {
+    if (this.roles.length === 1 && (this.mode !== MODES.QUORUM || this.quorumSize === 1))
+      return this.roles[0].getSimpleAddress(roles);
+    else
+      return null;
+  }
+
   async availableFor(options: AvailableForOptions) {
     const finalTarget = this.resolve(options.roles);
     const totalRoles = finalTarget.roles.length;

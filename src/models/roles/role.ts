@@ -13,6 +13,10 @@ export abstract class Role {
   availableFor(options: AvailableForOptions): Promise<boolean> {
     throw new Error("must be implemented in subclass");
   }
+
+  getSimpleAddress(roles: RoleDictionary, ignoreRefs: boolean = true): Promise<KeyAddress | null> {
+    throw new Error("must be implemented in subclass");
+  }
 }
 
 export interface AvailableForOptions {

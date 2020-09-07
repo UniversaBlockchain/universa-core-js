@@ -54,6 +54,21 @@ export default class Contract {
     else return null;
   }
 
+  async getSignatureKeys() {
+    const keys = [];
+    const signaturesTotal = this.signatures.length;
+    let i = 0;
+
+    const query = this.signatures.map(async (signature) => {
+      const { exts } = Boss.load(signature);
+      const targetSignature = Boss.load(exts);
+
+      return await PublicKey.unpack(targetSignature['pub_key']);
+    });
+
+    return await Promise.all(query);
+  }
+
   async isSignedBy(options: signedByOptions) {
     const { publicKey, address } = options;
     let signed = false;

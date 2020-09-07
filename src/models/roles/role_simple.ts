@@ -30,7 +30,19 @@ export default class RoleSimple implements Role, BossSerializable {
       this.keyRecords = options.keys.map(key => KeyRecord.create(key));
   }
 
-  resolve() { return this; }
+  resolve(roles: RoleDictionary, nestedLevel: number = 0) { return this; }
+
+  async getSimpleAddress(roles: RoleDictionary = {}, ignoreRefs = true) {
+    if (this.keyRecords.length + this.addresses.length > 1) return null;
+
+    if (this.keyRecords.length === 1) {
+      const key = await this.keyRecords[0].getKey();
+
+      return key.shortAddress;
+    } else {
+      return this.addresses[0];
+    }
+  }
 
   async availableFor(options: AvailableForOptions) {
     const keyLoaders = this.keyRecords.map(record => record.getKey());
