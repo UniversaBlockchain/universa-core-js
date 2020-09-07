@@ -236,6 +236,7 @@ export default class Network {
           const { state } = itemResult;
           processVote(response.itemResult.state, nodeId);
         } catch (err) {
+          console.log("On check contract: ", err);
           if (ids.length > 0) processNext();
           else failure(new Error("not enough responses"));
         }
