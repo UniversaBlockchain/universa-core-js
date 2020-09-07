@@ -28,6 +28,11 @@ interface NetworkOptions {
   topologyFile?: string
 }
 
+interface ContractState {
+  isApproved: boolean,
+  states: any
+}
+
 type ConnectionDict = { [id: string]: NodeConnection };
 
 export default class Network {
@@ -160,7 +165,7 @@ export default class Network {
     return this.command("getParcelProcessingState", { parcelId: hashId });
   }
 
-  isApproved(id: Uint8Array | string, trustLevel: number): Promise<boolean> {
+  isApprovedExtended(id: Uint8Array | string, trustLevel: number): Promise<ContractState> {
     const self = this;
 
     return new Promise((resolve, reject) => {
@@ -179,6 +184,8 @@ export default class Network {
 
       let positive = 0;
       let negative = 0;
+      let states = {};
+
       const requests: Array<Cancelable<any>> = [];
       if (!self.topology) throw new Error("missing topology");
       const ids = Object.keys(self.topology.nodes);
@@ -190,7 +197,11 @@ export default class Network {
         if (resultFound) return;
 
         resultFound = true;
-        resolve(status);
+
+        resolve({
+          isApproved: status,
+          states
+        });
       }
 
       function failure(err: Error) {
@@ -210,6 +221,10 @@ export default class Network {
       function processVote(state: string, nodeId: string) {
         if (resultFound) return;
         if (isPending(state)) return ids.unshift(nodeId);
+
+        if (!states[state]) states[state] = 1;
+        else states[state] += 1;
+
         if (state === "APPROVED") {
           positive++;
           if (positive >= Nt) return success(true);
@@ -232,8 +247,6 @@ export default class Network {
           });
           requests.push(req);
           const response = await req;
-          const { itemResult } = response;
-          const { state } = itemResult;
           processVote(response.itemResult.state, nodeId);
         } catch (err) {
           console.log("On check contract: ", err);
@@ -244,5 +257,9 @@ export default class Network {
 
       for (let i = 0; i < Nt; i++) processNext();
     });
+  }
+
+  isApproved(id: Uint8Array | string, trustLevel: number): Promise<boolean> {
+    return this.isApprovedExtended(id, trustLevel).then(result => result.isApproved);
   }
 }

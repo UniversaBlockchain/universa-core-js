@@ -36,7 +36,7 @@ describe('Contract', () => {
     expect(contract.state.data.amount).to.equal('4.3062999998');
   });
 
-  it.only('should read signatures', async () => {
+  it('should read signatures', async () => {
     const tpack = Boss.load(pack1BIN) as TransactionPack;
     const contract = tpack.contract;
     const keys = await contract.getSignatureKeys();
