@@ -169,5 +169,19 @@ describe('Network', function() {
 
       status.isApproved.should.equal(true);
     });
+
+    it('should do full status check (Extended with callback)', async function() {
+      this.timeout(60000);
+      let status;
+
+      function onResponse(resp) {
+        console.log(resp);
+      }
+
+      try { status = await network.isApprovedExtended(approvedId, 0.6, onResponse); }
+      catch (err) { console.log("on network command:", err); }
+
+      status.isApproved.should.equal(true);
+    });
   });
 });

@@ -55,6 +55,8 @@ export default class Network {
 
   size() {
     if (this.topology) return this.topology.size();
+
+    throw new Error("You need to connect before accessing size");
   }
 
   async getLastTopology() {
@@ -166,7 +168,11 @@ export default class Network {
     return this.command("getParcelProcessingState", { parcelId: hashId });
   }
 
-  isApprovedExtended(id: Uint8Array | string, trustLevel: number): Promise<ContractState> {
+  isApprovedExtended(
+    id: Uint8Array | string,
+    trustLevel: number,
+    onNodeResponse?: (response: any) => void
+  ): Promise<ContractState> {
     const self = this;
 
     return new Promise((resolve, reject) => {
@@ -251,6 +257,9 @@ export default class Network {
           requests.push(req);
           const response = await req;
           const { itemResult } = response;
+
+          if (onNodeResponse) onNodeResponse({ nodeId, itemResult });
+
           isTestnet = itemResult.isTestnet;
 
           processVote(itemResult.state, nodeId);
