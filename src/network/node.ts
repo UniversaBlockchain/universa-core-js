@@ -40,6 +40,7 @@ export class Node {
   id: string | undefined;
   key: PublicKey | undefined;
   name: string;
+  http: string;
   https: string;
   ready: Promise<void>;
   keyBIN: Uint8Array;
@@ -65,7 +66,8 @@ export class Node {
       self.id = encode64(key.fingerprint);
     });
 
-    this.https = forceHTTPS(this.domainURLs.values().next().value);
+    this.http = this.domainURLs.values().next().value;
+    this.https = forceHTTPS(this.http);
   }
 
   async getId() {

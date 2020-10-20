@@ -160,7 +160,20 @@ describe('Network', function() {
       isApproved.should.equal(true);
     });
 
-    it('should do full status check (Extended)', async function() {
+    it('should do full status check (force http)', async function() {
+      this.timeout(60000);
+      network = new Network(privateKey, { forceHTTP: true });
+
+      await network.connect();
+      let isApproved: boolean = false;
+
+      try { isApproved = await network.isApproved(approvedId, 0.6); }
+      catch (err) { console.log("on network command:", err); }
+
+      isApproved.should.equal(true);
+    });
+
+    it('should do full status check (extended response)', async function() {
       this.timeout(60000);
       let status;
 
@@ -170,12 +183,12 @@ describe('Network', function() {
       status.isApproved.should.equal(true);
     });
 
-    it('should do full status check (Extended with callback)', async function() {
+    it('should do full status check (extended response with callback)', async function() {
       this.timeout(60000);
       let status;
 
       function onResponse(resp) {
-        console.log(resp);
+        // console.log(resp);
       }
 
       try { status = await network.isApprovedExtended(approvedId, 0.6, onResponse); }

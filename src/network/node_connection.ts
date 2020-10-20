@@ -16,20 +16,23 @@ const CONNECTION_TIMEOUT = 1000;
 export default class NodeConnection {
   node: Node;
   authKey: PrivateKey;
+  nodeURL: string;
   sessionId: number | undefined;
   sessionKey: SymmetricKey | undefined;
 
-  constructor(node: Node, authKey: PrivateKey) {
+  constructor(node: Node, authKey: PrivateKey, forceHTTP?: boolean) {
     this.node = node;
     this.authKey = authKey;
+
+    this.nodeURL = node.https;
+    if (forceHTTP) this.nodeURL = node.http;
   }
 
   async connect() {
-    const url = this.node.https;
     const clientNonce = randomBytes(47);
     const signatureOpts: PrivateKeySignOpts = { pssHash: "sha512" };
 
-    console.log(`setting up protected connection to ${url}`);
+    console.log(`setting up protected connection to ${this.nodeURL}`);
 
     const clientKey = await this.authKey.publicKey.pack();
 
@@ -106,7 +109,7 @@ export default class NodeConnection {
   }
 
   request(path: string, params: any = {}, requestOptions: any = {}) {
-    const url = `${this.node.https}/${path}`;
+    const url = `${this.nodeURL}/${path}`;
     const data = { requestData64: encode64(Boss.dump(params)) };
 
     return NodeConnection.request("POST", url, { data, ...requestOptions });

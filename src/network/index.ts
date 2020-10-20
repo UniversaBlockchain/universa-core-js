@@ -25,7 +25,8 @@ function createHashId(id: Uint8Array) {
 interface NetworkOptions {
   topologyKey?: string,
   topology?: Topology,
-  topologyFile?: string
+  topologyFile?: string,
+  forceHTTP?: boolean
 }
 
 interface ContractState {
@@ -40,6 +41,7 @@ export default class Network {
   options: NetworkOptions;
   connections: ConnectionDict;
   topologyKey: string;
+  forceHTTP: boolean;
   ready: Promise<void>;
   authKey: PrivateKey;
   setReady: any;
@@ -49,6 +51,7 @@ export default class Network {
     this.options = options || {};
     this.connections = {};
     this.topologyKey = this.options.topologyKey || "__universa_topology";
+    this.forceHTTP = this.options.forceHTTP || false;
     this.ready = new Promise((resolve, reject) => { this.setReady = resolve; });
     this.authKey = privateKey;
   }
@@ -106,7 +109,7 @@ export default class Network {
 
     await this.ready;
 
-    const connection = new NodeConnection(node, this.authKey);
+    const connection = new NodeConnection(node, this.authKey, this.forceHTTP);
     await connection.connect();
     this.connections[nodeId] = connection;
 
