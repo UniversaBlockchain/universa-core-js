@@ -224,10 +224,10 @@ export default class Network {
       }
 
       function processNext() {
-        if(!resultFound && ids.length > 0) {
+        if (!resultFound && ids.length > 0) {
           const id = ids.pop();
           id && processNode(id);
-        }
+        } else failure(new Error("not enough responses to find consensus"));
       }
 
       function processVote(state: string, nodeId: string) {
@@ -245,6 +245,8 @@ export default class Network {
           negative++;
           if (negative >= N10) return success(false);
         }
+
+        if (positive + negative >= Nt) processNext();
       }
 
       async function processNode(nodeId: string) {

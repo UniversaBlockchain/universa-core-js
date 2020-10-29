@@ -196,5 +196,22 @@ describe('Network', function() {
 
       status.isApproved.should.equal(true);
     });
+
+    it('should not freeze if responses are not enough to find consensus', async function() {
+      this.timeout(60000);
+      let status;
+
+      const freezeID = decode64("0RS81rF8Ohu8IBjo6v+l15G3WqaW62EcLKM9iAVzjRyHfrL3PsrfKEJJnmVinrNHyAZQtY6UpEnj2kqAoc3vByJWqdFMC8t+Bk3rgUdTIzscr4o8rkG/cUSPQVtTS7Gz");
+
+      function onResponse(resp) {
+      }
+
+      try { status = await network.isApprovedExtended(freezeID, 0.6, onResponse); }
+      catch (err) {
+        console.log("on network command:", err);
+      }
+
+      status.isApproved.should.equal(true);
+    });
   });
 });

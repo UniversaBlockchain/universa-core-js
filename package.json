@@ -1,6 +1,6 @@
 {
   "name": "universa-core",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Tools to perform basic operations with Universa networks and contracts",
   "main": "src/index.ts",
   "scripts": {
@@ -23,7 +23,7 @@
     "url": "https://github.com/UniversaBlockchain/universa-core-js"
   },
   "dependencies": {
-    "unicrypto": "^1.0.4",
+    "unicrypto": "^1.0.6",
     "xhr-request": "^1.1.0"
   },
   "devDependencies": {
