@@ -10,6 +10,9 @@ import {
 const forceHTTPS = (url: string) =>
   url.replace("http://", "https://").replace(":8080", ":443");
 
+const forceHTTP = (url: string) =>
+  url.replace("https://", "http://").replace(":443", ":8080");
+
 const GET_TOPOLOGY_TIMEOUT = 1000;
 
 function difference(setA: Set<string>, setB: Set<string>) {
@@ -66,8 +69,14 @@ export class Node {
       self.id = encode64(key.fingerprint);
     });
 
-    this.http = this.domainURLs.values().next().value;
-    this.https = forceHTTPS(this.http);
+    const domainURL = this.domainURLs.values().next().value;
+
+    if (this.directURLs.size)
+      this.http = this.directURLs.values().next().value;
+    else
+      this.http = forceHTTP(domainURL);
+
+    this.https = forceHTTPS(domainURL);
   }
 
   async getId() {

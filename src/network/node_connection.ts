@@ -20,12 +20,12 @@ export default class NodeConnection {
   sessionId: number | undefined;
   sessionKey: SymmetricKey | undefined;
 
-  constructor(node: Node, authKey: PrivateKey, forceHTTP?: boolean) {
+  constructor(node: Node, authKey: PrivateKey, directConnection?: boolean) {
     this.node = node;
     this.authKey = authKey;
 
     this.nodeURL = node.https;
-    if (forceHTTP) this.nodeURL = node.http;
+    if (directConnection) this.nodeURL = node.http;
   }
 
   async connect() {

@@ -376,14 +376,14 @@ try { response = await network.command("sping"); }
 catch (err) { console.log("on network command:", err); }
 ```
 
-Connect to network and force HTTP connections to nodes
+Connect to network with direct connections (http/ip) to nodes
 
 ```js
 import { Network, PrivateKey } from 'universa-core';
 
 // privateKey is PrivateKey instance
 const network = new Network(privateKey, {
-  forceHTTP: true
+  directConnection: true
 });
 let response;
 

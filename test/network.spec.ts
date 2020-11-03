@@ -162,7 +162,7 @@ describe('Network', function() {
 
     it('should do full status check (force http)', async function() {
       this.timeout(60000);
-      network = new Network(privateKey, { forceHTTP: true });
+      network = new Network(privateKey, { directConnection: true });
 
       await network.connect();
       let isApproved: boolean = false;
