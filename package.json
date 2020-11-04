@@ -1,6 +1,6 @@
 {
   "name": "universa-core",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Tools to perform basic operations with Universa networks and contracts",
   "main": "src/index.ts",
   "scripts": {

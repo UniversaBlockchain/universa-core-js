@@ -92,7 +92,7 @@ export default class Network {
   async connect() {
     this.topology = await this.getLastTopology();
     // console.log(`Connecting to the Universa network`);
-    await this.topology.update();
+    await this.topology.update(this.directConnection);
     // console.log(`Loaded network configuration, ${this.size()} nodes`);
     this.saveNewTopology();
     this.setReady(true);

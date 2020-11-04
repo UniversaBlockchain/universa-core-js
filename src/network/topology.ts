@@ -13,7 +13,7 @@ export default class Topology {
     this.updatedAt = updatedAt;
   }
 
-  async update() {
+  async update(directConnection?: boolean) {
     const trustLevel = 0.4;
     const self = this;
     const confirmed: { [id: string]: any } = {};
@@ -109,7 +109,7 @@ export default class Topology {
           if (resultFound) return;
 
           try {
-            const response = await source[id].getTopology();
+            const response = await source[id].getTopology(directConnection);
             await processResponse(id, response);
           } catch(err) {
             // console.log("On topology request: ", err);

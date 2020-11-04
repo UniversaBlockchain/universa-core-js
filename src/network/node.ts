@@ -113,10 +113,13 @@ export class Node {
     };
   }
 
-  async getTopology() {
+  async getTopology(directConnection?: boolean) {
     await this.ready;
 
-    const resp = await NodeConnection.request("GET", `${this.https}/topology`, {
+    let url = this.https;
+    if (directConnection) url = this.http;
+
+    const resp = await NodeConnection.request("GET", `${url}/topology`, {
       timeout: GET_TOPOLOGY_TIMEOUT
     });
     const { signature, packed_data: packed } = resp;
