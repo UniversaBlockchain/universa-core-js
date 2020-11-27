@@ -67,7 +67,7 @@ export default class Parcel implements BossSerializable {
     if (options.isTestnet) key = 'test_transaction_units';
 
     const uOld = upack.contract;
-    if (!uOld.originalBinary)
+    if (!uOld.binary)
       throw new Error('Can\'t create payment with draft u pack');
 
     // const balanceBig = new Big(uOld.state.data[key]);
@@ -87,7 +87,7 @@ export default class Parcel implements BossSerializable {
     uNew.capsule.contract.setCreatorTo('owner');
     uNew.packData();
 
-    return new TransactionPack(uNew.pack(), { subItems: [uOld.originalBinary]});
+    return new TransactionPack(uNew.pack(), { subItems: [uOld.binary]});
   }
 }
 

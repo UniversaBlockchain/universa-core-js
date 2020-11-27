@@ -324,7 +324,8 @@ export default class Network {
 
   static async getCost(tpack: TransactionPack) {
     const url = 'https://xchange.mainnetwork.io/api/v1/contracts/cost';
-    const data = { packedContract: encode64(Boss.dump(tpack)) };
+    const binary = await tpack.pack();
+    const data = { packedContract: encode64(binary) };
 
 
     return NodeConnection.xchangeRequest('POST', url, { data });

@@ -30,6 +30,8 @@ const keyPassword = "81bf60af-703c-4c28-8fc7-878860089df5";
 function openTP(filePath: string) {
   const fs = require('fs');
   const bin = fs.readFileSync(__dirname + filePath);
+
+  // console.log(encode64(bin));
   return Boss.load(bin) as TransactionPack;
 }
 
@@ -43,9 +45,9 @@ function openKey(filePath: string, password?: string) {
     return PrivateKey.unpack(bin);
 }
 
-function saveTP(filePath: string, tpack: TransactionPack) {
+function saveTP(filePath: string, packed: Uint8Array) {
   const fs = require('fs');
-  const packed = Boss.dump(tpack);
+
   fs.writeFileSync(__dirname + filePath, packed, 'binary');
 }
 
@@ -148,8 +150,16 @@ describe('Contract', () => {
     console.log(response);
   });
 
-  it.skip('should register contract', async() => {
-    const upackNum = 1;
+  it.skip('should read references', async() => {
+    const pack = openTP(`/contracts/mark3.tx.unicon`);
+    await pack.ready;
+
+
+    console.log(pack);
+  });
+
+  it.only('should register contract', async() => {
+    const upackNum = 3;
     // const myContractKey = await PrivateKey.unpack({ bin: keyBin, password: keyPassword });
     const uKey = await openKey('/contracts/core.private.unikey');
     const upack = openTP(`/contracts/upack${upackNum}.unicon`);
@@ -160,8 +170,6 @@ describe('Contract', () => {
     catch (err) { console.log("network connection error: ", err); }
 
     const myContract = await createToken(uKey);
-    // SAVE DRAFT CONTRACT BEFORE REGISTRATION
-    saveTP('/contracts/my_contract.unicon', myContract);
 
     const costs = await Network.getCost(myContract);
     console.log(costs); // { costInTu: 1, cost: 1, testnetCompatible: true, status: 'OK' }
@@ -171,14 +179,19 @@ describe('Contract', () => {
     });
     await payment.sign(uKey);
 
-    // SAVE DRAFT PAYMENT BEFORE REGISTRATION
-    saveTP(`/contracts/upack${upackNum + 1}.unicon`, payment);
+    const myContractBin = await myContract.pack();
+    const paymentBin = await payment.pack();
 
-    const parcel = await Parcel.create(Boss.dump(payment), Boss.dump(myContract));
+    console.log(encode64(paymentBin));
+    // SAVE DRAFT CONTRACT BEFORE REGISTRATION
+    saveTP('/contracts/my_contract.unicon', myContractBin);
+    // SAVE DRAFT PAYMENT BEFORE REGISTRATION
+    saveTP(`/contracts/upack${upackNum + 1}.unicon`, paymentBin);
+
+    const parcel = await Parcel.create(paymentBin, myContractBin);
 
     saveParcel('/contracts/parcel.bin', parcel);
 
-    console.log(encode64(myContract.contract.originalBinary as Uint8Array));
     const response = await network.registerParcel(parcel);
     console.log(response.payment, response.payload);
 

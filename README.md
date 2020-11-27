@@ -278,9 +278,7 @@ import { TransactionPack, Boss } from 'universa-core';
 const tpackBinary: Uint8Array;
 const tpack = Boss.load(tpackBinary) as TransactionPack;
 
-tpack.contract // Contract
-tpack.referencedItems // Array<Contract>
-tpack.subItems // Array<Contract>
+tpack.contract // main contract
 
 // Get parent of main contract
 const parent = await tpack.getItem(tpack.contract.parent);
@@ -294,6 +292,26 @@ const tpackBinary: Uint8Array;
 const tpack = Boss.load(tpackBinary);
 
 tpack.sign(privateKey); // some PrivateKey instance to sign
+```
+
+Get tagged contract
+```js
+import { TransactionPack, Boss } from 'universa-core';
+
+const tpackBinary: Uint8Array;
+const tpack = Boss.load(tpackBinary);
+
+const contract = await tpack.getTag("sometag");
+```
+
+Add tag
+```js
+import { TransactionPack, Boss } from 'universa-core';
+
+const tpackBinary: Uint8Array;
+const tpack = Boss.load(tpackBinary);
+
+await tpack.addTag("mytag", hashId); // some HashId instance
 ```
 
 ### Contract
@@ -547,14 +565,14 @@ const paymentMain = await Parcel.createPayment(costs.cost, upack, {
 await paymentTest.sign(uKey); // uKey is upack owner's PrivateKey
 
 // ALWAYS SAVE DRAFT PAYMENT BEFORE REGISTRATION
-const paymentBinaryToSave = Boss.dump(paymentTest); // TransactionPack binary
+const paymentTestBin = await paymentTest.pack(); // TransactionPack binary
 ```
 
 To create parcel
 ```js
 const tpackToRegister; // TransactionPack instance to register
 
-const parcel = await Parcel.create(Boss.dump(payment), Boss.dump(tpackToRegister));
+const parcel = await Parcel.create(paymentBin, tpackToRegisterBin);
 ```
 
 To register in Network
@@ -622,9 +640,9 @@ const payment = await Parcel.createPayment(costs.costInTu, uPack, {
 await payment.sign(uKey);
 
 // SAVE CONTRACT BINARY BEFORE REGISTRATION
-const myUnitPackBinary = Boss.dump(myUnitPack);
+const myUnitPackBinary = await myUnitPack.pack();
 // SAVE PAYMENT BINARY BEFORE REGISTRATION
-const paymentBinary = Boss.dump(payment);
+const paymentBinary = await payment.pack();
 
 const parcel = await Parcel.create(paymentBinary, myUnitPackBinary);
 

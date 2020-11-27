@@ -7,7 +7,7 @@ import { Role } from './roles/role';
 interface ContractOptions {
   type?: string,
   version?: number,
-  originalBinary?: Uint8Array
+  binary?: Uint8Array
 }
 
 interface signedByOptions {
@@ -21,7 +21,7 @@ export default class Contract {
   signatures: Array<Uint8Array>;
   data: Uint8Array;
   capsule: Capsule;
-  originalBinary: Uint8Array | null = null;
+  binary: Uint8Array | null = null;
 
   constructor(
     data: Uint8Array,
@@ -37,7 +37,7 @@ export default class Contract {
     if (options) {
       this.type = options.type || this.type;
       this.version = options.version || this.version;
-      this.originalBinary = options.originalBinary || this.originalBinary;
+      this.binary = options.binary || this.binary;
     }
   }
 
@@ -52,8 +52,8 @@ export default class Contract {
   get state() {return this.capsule.state; }
 
   hashId() {
-    if (this.originalBinary) return HashId.calculate(this.originalBinary);
-    else return null;
+    if (this.binary) return HashId.calculate(this.binary);
+    else throw new Error('contract is not packed yet');
   }
 
   async getSignatureKeys() {
@@ -127,7 +127,7 @@ export default class Contract {
       version: this.version
     });
 
-    this.originalBinary = packed;
+    this.binary = packed;
 
     return packed;
   }
@@ -135,10 +135,10 @@ export default class Contract {
   async createRevision(createdAt?: Date) {
     const parentId = await this.hashId();
 
-    if (!parentId || !this.originalBinary)
+    if (!parentId || !this.binary)
       throw new Error('Can\'t create revision of draft contract');
 
-    const newRevision = Contract.unpack(this.originalBinary);
+    const newRevision = Contract.unpack(this.binary);
     const capsule = newRevision.capsule;
     const unicontract = capsule.contract;
 
@@ -159,7 +159,7 @@ export default class Contract {
     return new Contract(raw.data, raw.signatures, {
       type: raw.type,
       version: raw.version,
-      originalBinary: binary
+      binary
     });
   }
 }
