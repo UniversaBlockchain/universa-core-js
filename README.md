@@ -286,6 +286,16 @@ tpack.subItems // Array<Contract>
 const parent = await tpack.getItem(tpack.contract.parent);
 ```
 
+Sign transaction pack's main contract
+```js
+import { TransactionPack, Boss } from 'universa-core';
+
+const tpackBinary: Uint8Array;
+const tpack = Boss.load(tpackBinary);
+
+tpack.sign(privateKey); // some PrivateKey instance to sign
+```
+
 ### Contract
 
 ```js
@@ -479,6 +489,149 @@ try {
   isApproved = await network.isApproved(approvedId, 0.6);
 }
 catch (err) { console.log("on network command:", err); }
+```
+
+### Get network current time
+
+Contract revisions that contain state.createdAt time far in past or future will be declined. To avoid this, it's recommended to use network current time while creating revisions.
+
+To load network time and use current timestamp:
+
+```js
+import { Network, PrivateKey } from 'universa-core';
+
+const network = new Network(privateKey);
+
+try { await network.connect(); } // network time is loaded
+catch (err) { console.log("network connection error: ", err); }
+
+const createdAt = network.now(); // Date (network current time)
+```
+
+Also, you can load network time only, without establishing connection:
+
+```js
+import { Network, PrivateKey } from 'universa-core';
+
+const network = new Network(privateKey);
+await network.loadNetworkTime(); // network time is loaded
+const createdAt = network.now(); // Date (network current time)
+```
+
+### Calculate transaction pack registration cost
+
+To make payment you need to request it's costs first:
+```js
+const tpack; // TransactionPack instance
+const costs = await Network.getCost(tpack);
+console.log(costs); // { costInTu: 1, cost: 1, testnetCompatible: true }
+```
+
+## Parcel
+
+Parcel is special object used to register contract with U payment.
+
+To create payment
+```js
+const tpack; // TransactionPack instance to register
+const upack; // TransactionPack instance of you U package contract
+
+const costs = await Network.getCost(tpack);
+// Create payment to register in TestNet
+const paymentTest = await Parcel.createPayment(costs.costInTu, upack, { isTestnet: true });
+// or in MainNet
+const paymentMain = await Parcel.createPayment(costs.cost, upack, {
+  createdAt: network.now() // Network instance with loaded time offset
+});
+
+await paymentTest.sign(uKey); // uKey is upack owner's PrivateKey
+
+// ALWAYS SAVE DRAFT PAYMENT BEFORE REGISTRATION
+const paymentBinaryToSave = Boss.dump(paymentTest); // TransactionPack binary
+```
+
+To create parcel
+```js
+const tpackToRegister; // TransactionPack instance to register
+
+const parcel = await Parcel.create(Boss.dump(payment), Boss.dump(tpackToRegister));
+```
+
+To register in Network
+```js
+const network; // Network instance, connected
+
+const result = await network.registerParcel(parcel);
+console.log(result.payment, result.payload); // shows itemResult for each pack
+```
+
+## Full example for creating and register your own unit contract
+
+```js
+const uPack; // U package TransactionPack instance, last revision
+const uKey; // PrivateKey instance, uPack owner's key
+const unitKey; // PrivateKey instance to be owner of your unit contract
+
+const network = new Network(uKey);
+// you can omit this step if you already have connected Network instance
+await network.loadNetworkTime();
+
+// creating issuer role
+const issuer = new RoleSimple('issuer', {
+  addresses: [unitKey.publicKey.shortAddress]
+});
+
+const splitJoinPermission = SplitJoinPermission.create('owner', {
+  'field_name': 'amount',
+  'min_value': '0.0',
+  'min_unit': '10.0',
+  'join_match_fields': ['state.origin']
+});
+
+// NOTICE: RevokePermission will be always added by default
+const myContract = Contract.create(issuer, {
+  definitionData: {
+    'template_name': 'UNIT_CONTRACT',
+    'unit_name': 'My First Token',
+    'unit_short_name': 'MFT',
+    'description': 'This is my first token contract'
+  },
+  stateData: {
+    'amount': '100'
+  },
+  permissions: [
+    ChangeOwnerPermission.create('owner'),
+    splitJoinPermission
+  ],
+  expiresAt: '3m',
+  createdAt: network.now()
+});
+
+await myContract.sign(unitKey);
+
+// TransactionPack is ready to register
+const myUnitPack = new TransactionPack(myContract.pack());
+
+// getting costs
+const costs = await Network.getCost(myUnitPack);
+
+const payment = await Parcel.createPayment(costs.costInTu, uPack, {
+  isTestnet: true,
+  createdAt: network.now()
+});
+await payment.sign(uKey);
+
+// SAVE CONTRACT BINARY BEFORE REGISTRATION
+const myUnitPackBinary = Boss.dump(myUnitPack);
+// SAVE PAYMENT BINARY BEFORE REGISTRATION
+const paymentBinary = Boss.dump(payment);
+
+const parcel = await Parcel.create(paymentBinary, myUnitPackBinary);
+
+const response = await network.registerParcel(parcel);
+
+console.log(response.payment); // itemResult of payment registration
+console.log(response.payload); // itemResult of your unit contract registration
 ```
 
 ## Running tests

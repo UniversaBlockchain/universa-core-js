@@ -1,12 +1,12 @@
-import { Boss, BossSerializable } from 'unicrypto';
+import { Boss, BossSerializable, PrivateKey } from 'unicrypto';
 import Contract from './contract';
 import HashId from './hash_id';
 
 type ItemRegistry = { [hashId: string]: Contract };
 
 interface TransactionPackOptions {
-  subItems: Array<Uint8Array>,
-  referencedItems: Array<Uint8Array>
+  subItems?: Array<Uint8Array>,
+  referencedItems?: Array<Uint8Array>
 }
 
 export default class TransactionPack implements BossSerializable {
@@ -64,7 +64,7 @@ export default class TransactionPack implements BossSerializable {
       contract: this.contractPacked,
       subItems: this.subItemsPacked,
       referencedItems: this.referencedItemsPacked
-    }
+    };
   }
 
   static deserializeFromBOSS(serialized: any) {
@@ -72,6 +72,13 @@ export default class TransactionPack implements BossSerializable {
       subItems: serialized.subItems || [],
       referencedItems: serialized.referencedItems || []
     });
+  }
+
+  async sign(key: PrivateKey) {
+    console.log("run sign tpack");
+    await this.contract.sign(key);
+    console.log("run pack tpack contract");
+    this.contractPacked = this.contract.pack();
   }
 }
 

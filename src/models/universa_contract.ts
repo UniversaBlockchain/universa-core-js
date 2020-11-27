@@ -1,8 +1,9 @@
-import { Boss, BossSerializable } from 'unicrypto';
-import { Role } from './roles/role';
+import { Boss, BossSerializable, shortId } from 'unicrypto';
+import { Role, RoleDictionary } from './roles/role';
+import RoleLink from './roles/role_link';
 import HashId from './hash_id';
-import { RoleDictionary } from './roles/role';
 import Permission from './permissions/permission';
+import RevokePermission from './permissions/revoke_permission';
 
 export interface State {
   createdAt: Date,
@@ -14,21 +15,45 @@ export interface State {
   roles: RoleDictionary,
   parent: HashId | null,
   origin: HashId | null,
-  branchId: string | null,
-  // references: Array[Reference] | null
+  branchId?: string | null,
+  references: any
 }
 
 export interface Definition {
   issuer: Role,
   permissions: { [id: string]: Permission },
   createdAt: Date,
-  data: any
+  data: any,
+  references: any
 }
 
 interface UniversaContractSerialized {
   api_level: number,
   definition: any,
   state: any
+}
+
+interface ContractCreateOptions {
+  createdAt?: Date,
+  expiresAt?: Date | string
+}
+
+const DEFAULT_EXPIRES_AT = 5; // years
+const DEFAULT_API_LEVEL = 4;
+
+function uniqueShortId(existing: Array<string>) {
+  const maxIterations = 100000;
+  let found = false;
+  let id;
+  let i = 0;
+
+  while (i < maxIterations && !found) {
+    id = shortId();
+    if (existing.indexOf(id) !== -1) found = true;
+    i++;
+  }
+
+  return id;
 }
 
 export class UniversaContract implements BossSerializable {
@@ -42,12 +67,77 @@ export class UniversaContract implements BossSerializable {
     this.state = state;
   }
 
+  static create(issuer: Role, options?: ContractCreateOptions) {
+    const opts = options || {};
+    const expiresAtOpt = opts.expiresAt;
+
+    const createdAt = opts.createdAt || new Date();
+    let expiresAt = new Date(createdAt.getTime());
+
+    if (!expiresAtOpt) {
+      expiresAt.setFullYear(expiresAt.getFullYear() + DEFAULT_EXPIRES_AT);
+    } else if (typeof expiresAtOpt === 'string') {
+      const tpe = expiresAtOpt.slice(-1);
+      const amount = parseInt(expiresAtOpt.slice(0, expiresAtOpt.length - 1));
+
+      if (tpe === 'd') expiresAt.setDate(expiresAt.getDate() + amount);
+      if (tpe === 'm') expiresAt.setMonth(expiresAt.getMonth() + amount);
+      if (tpe === 'y') expiresAt.setFullYear(expiresAt.getFullYear() + amount);
+    } else {
+      expiresAt = expiresAtOpt;
+    }
+
+    const revokePermission = RevokePermission.create('owner');
+    const revokeId = shortId();
+
+    const definition: Definition = {
+      createdAt,
+      issuer,
+      permissions: { [revokeId]: revokePermission },
+      data: {},
+      references: []
+    };
+
+    const state: State = {
+      createdAt,
+      creator: new RoleLink('creator', 'issuer'),
+      revision: 1,
+      owner: new RoleLink('owner', 'issuer'),
+      expiresAt,
+      data: {},
+      parent: null,
+      origin: null,
+      branchId: null,
+      roles: {},
+      references: []
+    };
+
+    return new UniversaContract(DEFAULT_API_LEVEL, definition, state);
+  }
+
   get issuer() { return this.definition.issuer; }
   get owner() { return this.state.owner; }
   get creator() { return this.state.creator; }
 
   get parent() { return this.state.parent; }
   get origin() { return this.state.origin; }
+
+  addPermission(permission: Permission) {
+    const id = uniqueShortId(Object.keys(this.definition.permissions));
+    this.definition.permissions[id] = permission;
+  }
+
+  removePermission(permissionId: string) {
+    delete this.definition.permissions[permissionId];
+  }
+
+  setParent(id: HashId) { this.state.parent = id; }
+  setOrigin(id: HashId) { this.state.origin = id; }
+  setCreatorTo(roleName: string) {
+    this.state.creator = new RoleLink('creator', roleName);
+  };
+
+  incrementRevision() { this.state.revision += 1; }
 
   static className = "UniversaContract";
 
@@ -59,7 +149,8 @@ export class UniversaContract implements BossSerializable {
       'issuer': d.issuer,
       'permissions': d.permissions,
       'created_at': d.createdAt,
-      'data': d.data
+      'data': d.data,
+      'references': d.references
     };
 
     const stateSerialized = {
@@ -72,7 +163,8 @@ export class UniversaContract implements BossSerializable {
       'roles': s.roles,
       'parent': s.parent,
       'origin': s.origin,
-      'branch_id': s.branchId
+      'branch_id': s.branchId,
+      'references': s.references
     };
 
     return {
@@ -97,7 +189,8 @@ export class UniversaContract implements BossSerializable {
       issuer: rawDefinition.issuer,
       permissions: rawDefinition.permissions,
       createdAt: rawDefinition['created_at'],
-      data: rawDefinition.data
+      data: rawDefinition.data,
+      references: rawDefinition.references || []
     };
 
     const state = {
@@ -110,7 +203,8 @@ export class UniversaContract implements BossSerializable {
       roles: stateRoles,
       parent: rawState.parent,
       origin: rawState.origin,
-      branchId: rawState['branch_id']
+      branchId: rawState['branch_id'],
+      references: rawState['references'] || []
     };
 
     return new UniversaContract(apiLevel, definition, state);

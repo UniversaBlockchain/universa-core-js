@@ -3,6 +3,9 @@ import { Node } from './node';
 import Topology from './topology';
 import { retry, abortable, readJSON, Cancelable } from '../utils';
 import NodeConnection from './node_connection';
+import TransactionPack from '../models/transaction_pack';
+import Parcel from '../models/parcel';
+import HashId from '../models/hash_id';
 
 const mainnet = require('../../mainnet.json');
 
@@ -22,6 +25,10 @@ function createHashId(id: Uint8Array) {
   };
 }
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 interface NetworkOptions {
   topologyKey?: string,
   topology?: Topology,
@@ -35,6 +42,11 @@ interface ContractState {
   states: any
 }
 
+interface ParcelState {
+  payment: any,
+  payload: any
+}
+
 type ConnectionDict = { [id: string]: NodeConnection };
 
 export default class Network {
@@ -46,6 +58,8 @@ export default class Network {
   authKey: PrivateKey;
   setReady: any;
   topology: Topology | undefined;
+  timeOffset: number | null;
+  timeUpdatedAt: number | null;
 
   constructor(privateKey: PrivateKey, options?: NetworkOptions) {
     this.options = options || {};
@@ -54,6 +68,8 @@ export default class Network {
     this.directConnection = this.options.directConnection || false;
     this.ready = new Promise((resolve, reject) => { this.setReady = resolve; });
     this.authKey = privateKey;
+    this.timeOffset = null;
+    this.timeUpdatedAt = null;
   }
 
   size() {
@@ -95,6 +111,9 @@ export default class Network {
     await this.topology.update(this.directConnection);
     // console.log(`Loaded network configuration, ${this.size()} nodes`);
     this.saveNewTopology();
+
+    if (!this.timeOffset) await this.loadNetworkTime();
+
     this.setReady(true);
 
     return this;
@@ -144,17 +163,18 @@ export default class Network {
     return abortable(retry(run, {
       attempts: 5,
       interval: 1000,
-      // onError: (e) => console.log(`${e}, send command again`)
+      onError: (e) => console.log(e, ` send command again`)
     }), req);
   }
 
   checkContract(
-    id: Uint8Array | string,
+    id: HashId | Uint8Array | string,
     connection?: NodeConnection,
     requestOptions?: any) {
     let itemId: Uint8Array;
     if (typeof id === "string") itemId = decode64(id);
-    else itemId = id;
+    else if (id.constructor.name === 'HashId') itemId = (id as HashId).composite3;
+    else itemId = id as Uint8Array;
 
     const hashId = createHashId(itemId);
 
@@ -281,5 +301,90 @@ export default class Network {
 
   isApproved(id: Uint8Array | string, trustLevel: number): Promise<boolean> {
     return this.isApprovedExtended(id, trustLevel).then(result => result.isApproved);
+  }
+
+  now() {
+    if (!this.timeOffset)
+      throw new Error('you should load network time before');
+
+    const localTime = Date.now();
+
+    return new Date(localTime + this.timeOffset);
+  }
+
+  async loadNetworkTime() {
+    const url = 'https://xchange.mainnetwork.io/api/v1/utc';
+    const response = await NodeConnection.xchangeRequest('GET', url);
+    const uTime = (JSON.parse(response)).currentEpochSecond * 1000;
+    const localTime = Date.now();
+
+    this.timeOffset = uTime - localTime;
+    this.timeUpdatedAt = localTime;
+  }
+
+  static async getCost(tpack: TransactionPack) {
+    const url = 'https://xchange.mainnetwork.io/api/v1/contracts/cost';
+    const data = { packedContract: encode64(Boss.dump(tpack)) };
+
+
+    return NodeConnection.xchangeRequest('POST', url, { data });
+  }
+
+  async registerParcel(parcel: Parcel) {
+    const self = this;
+
+    const packedItem = Boss.dump(parcel);
+    const connection = await this.getRandomConnection();
+
+    const paymentId = await parcel.payment.contract.hashId();
+    const payloadId = await parcel.payload.contract.hashId();
+
+    if (!paymentId || !payloadId) throw new Error('payment or payload wasn\'t saved!');
+    // console.log("send command approve parcel");
+    let response, error;
+
+    try {
+      response = await this.command('approveParcel',
+        { packedItem },
+        connection,
+        { timeout: 3000 }
+      );
+    } catch (err) {
+      // console.log(err);
+      error = err;
+
+      return this.registerParcel(parcel);
+    }
+
+    // if (error) return { payment: "", payload: "" };
+    // console.log("got err:", response.result.errors);
+    await sleep(100);
+
+    const paymentState = await finalState(paymentId);
+    const payloadState = await finalState(payloadId);
+
+    return {
+      payment: paymentState,
+      payload: payloadState
+    };
+
+    async function finalState(id: HashId) {
+      async function check(response) {
+        const { itemResult } = response;
+        const { state } = itemResult;
+
+        // console.log(state);
+
+        if (!state.startsWith("PENDING")) return itemResult;
+
+        await sleep(100);
+
+        return await finalState(id);
+      }
+
+      const response = await self.checkContract(id, connection);
+
+      return await check(response);
+    }
   }
 }

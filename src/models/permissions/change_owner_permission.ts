@@ -11,7 +11,7 @@ export default class ChangeOwnerPermission extends Permission implements BossSer
   }
 
   static create(roleName: string, name: string = ChangeOwnerPermission.DefaultName) {
-    return this.createLink(roleName, {}, name);
+    return new ChangeOwnerPermission(this.makeLink(name, roleName), name);
   }
 
   static deserializeFromBOSS(serialized: any): ChangeOwnerPermission {
@@ -19,6 +19,4 @@ export default class ChangeOwnerPermission extends Permission implements BossSer
   }
 }
 
-Boss.register("ChangeOwnerPermission",
-  ChangeOwnerPermission as BossDeserializable<ChangeOwnerPermission>
-);
+Boss.register("ChangeOwnerPermission", ChangeOwnerPermission);

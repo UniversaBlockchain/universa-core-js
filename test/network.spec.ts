@@ -213,5 +213,20 @@ describe('Network', function() {
 
       status.isApproved.should.equal(true);
     });
+
+    it('should load network time offset', async function() {
+      this.timeout(60000);
+
+      try { await network.loadNetworkTime(); }
+      catch (err) { console.log("on network command:", err); }
+
+      if (!network.timeOffset) return should.fail("timeOffset is null");
+
+      network.timeOffset.should.be.a('number');
+
+      const now = network.now();
+
+      now.should.be.instanceof(Date);
+    });
   });
 });

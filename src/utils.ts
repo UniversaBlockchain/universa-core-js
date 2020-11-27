@@ -14,7 +14,9 @@ export interface RetryOptions {
 
 export async function retry(fn: any, options?: RetryOptions): Promise<any> {
   const opts = options || {};
-  const attempts = opts.attempts || 5;
+  let attempts = 5;
+  if (typeof opts.attempts === 'number') attempts = opts.attempts;
+
   const interval = opts.interval || 1000;
   const exponential = opts.exponential || false;
   const onError = opts.onError;
@@ -32,7 +34,8 @@ export async function retry(fn: any, options?: RetryOptions): Promise<any> {
       return retry(fn, {
         attempts: attempts - 1,
         interval: exponential ? interval * 2 : interval,
-        exponential
+        exponential,
+        onError
       });
     } else throw new Error('Maximum attempts reached');
   }

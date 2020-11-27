@@ -13,19 +13,22 @@ import { isSuperset, createAddressSet } from '../../utils';
 interface RoleSimpleOptions {
   keys?: Array<PublicKey>,
   addresses?: Array<KeyAddress>,
-  keyRecords?: Array<KeyRecord>
+  keyRecords?: Array<KeyRecord>,
+  anonIds?: Array<any>
 }
 
 export default class RoleSimple implements Role, BossSerializable {
   name: string;
   keyRecords: Array<KeyRecord> = [];
   addresses: Array<KeyAddress> = [];
+  anonIds: Array<any> = [];
 
   constructor(name: string, options: RoleSimpleOptions) {
     this.name = name;
 
     if (options.addresses) this.addresses = options.addresses;
     if (options.keyRecords) this.keyRecords = options.keyRecords;
+    if (options.anonIds) this.anonIds = options.anonIds;
     if (options.keys)
       this.keyRecords = options.keys.map(key => KeyRecord.create(key));
   }
@@ -59,7 +62,8 @@ export default class RoleSimple implements Role, BossSerializable {
     return {
       name: this.name,
       keys: this.keyRecords,
-      addresses: this.addresses
+      addresses: this.addresses,
+      anonIds: this.anonIds
     };
   }
 
@@ -69,7 +73,8 @@ export default class RoleSimple implements Role, BossSerializable {
 
     return new RoleSimple(serialized.name, {
       keyRecords: records,
-      addresses: addresses
+      addresses: addresses,
+      anonIds: serialized.anonIds || []
     });
   }
 }

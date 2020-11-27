@@ -1,11 +1,11 @@
 {
   "name": "universa-core",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "description": "Tools to perform basic operations with Universa networks and contracts",
   "main": "src/index.ts",
   "scripts": {
     "coverage": "nyc npm run test",
-    "test": "mocha --timeout 5000 -r ts-node/register test/**/*.ts",
+    "test": "mocha --timeout 15000 -r ts-node/register test/**/*.ts",
     "build": "webpack --config webpack.config.js",
     "postinstall": "node ./bin/postinstall.js"
   },
@@ -23,6 +23,7 @@
     "url": "https://github.com/UniversaBlockchain/universa-core-js"
   },
   "dependencies": {
+    "big.js": "^6.0.2",
     "unicrypto": "^1.0.6",
     "xhr-request": "^1.1.0"
   },

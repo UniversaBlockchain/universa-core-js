@@ -32,7 +32,7 @@ export default class SplitJoinPermission extends Permission implements BossSeria
     params: SplitJoinParams,
     name: string = SplitJoinPermission.DefaultName
   ) {
-    return this.createLink(roleName, params, name);
+    return new SplitJoinPermission(this.makeLink(name, roleName), params, name);
   }
 
   static deserializeFromBOSS(serialized: any): SplitJoinPermission {

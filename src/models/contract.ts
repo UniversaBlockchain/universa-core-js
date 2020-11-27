@@ -1,6 +1,8 @@
-import { Boss, KeyAddress, PublicKey } from 'unicrypto';
+import { Boss, KeyAddress, PublicKey, PrivateKey } from 'unicrypto';
 import Capsule from './capsule';
+import { CreateCapsuleOptions } from './capsule';
 import HashId from './hash_id';
+import { Role } from './roles/role';
 
 interface ContractOptions {
   type?: string,
@@ -74,15 +76,42 @@ export default class Contract {
     let signed = false;
     let i = 0;
     const signaturesTotal = this.signatures.length;
+    const data = this.data;
 
-    while (i < signaturesTotal && !signed) {
-      if (publicKey) publicKey.verifyExtended
+    async function verify(index: number) {
+      if (index >= signaturesTotal) return false;
+      const signature = this.signatures[index];
 
-      i++;
+      let pub = publicKey;
+      if (!pub) {
+        const { exts } = Boss.load(signature);
+        const targetSignature = Boss.load(exts);
+
+        pub = await PublicKey.unpack(targetSignature['pub_key']);
+      }
+
+      const verified = await pub.verifyExtended(signature, data);
+      if (verified) return true;
+      return await verify(index + 1);
     }
 
+    return await verify(0);
+  }
 
-    return signed;
+  async sign(privateKey: PrivateKey) {
+    const isSigned = await this.isSignedBy({ publicKey: privateKey.publicKey });
+
+    if (isSigned) return;
+
+    const signature = await privateKey.signExtended(this.data);
+
+    this.signatures.push(signature);
+  }
+
+  static create(issuer: Role, options: CreateCapsuleOptions) {
+    const capsule = Capsule.create(issuer, options);
+
+    return new Contract(capsule.pack());
   }
 
   packData() {
@@ -91,12 +120,37 @@ export default class Contract {
   }
 
   pack() {
-    return Boss.dump({
+    const packed = Boss.dump({
       data: this.data,
       signatures: this.signatures,
       type: this.type,
       version: this.version
     });
+
+    this.originalBinary = packed;
+
+    return packed;
+  }
+
+  async createRevision(createdAt?: Date) {
+    const parentId = await this.hashId();
+
+    if (!parentId || !this.originalBinary)
+      throw new Error('Can\'t create revision of draft contract');
+
+    const newRevision = Contract.unpack(this.originalBinary);
+    const capsule = newRevision.capsule;
+    const unicontract = capsule.contract;
+
+    unicontract.incrementRevision();
+    if (!unicontract.origin) unicontract.setOrigin(parentId);
+    unicontract.setParent(parentId);
+    unicontract.state.createdAt = createdAt || new Date();
+
+    capsule.new = [];
+    capsule.revoking = [parentId];
+
+    return newRevision;
   }
 
   static unpack(binary: Uint8Array) {

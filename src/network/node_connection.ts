@@ -145,4 +145,29 @@ export default class NodeConnection {
 
     return abortable(promise, req);
   }
+
+  static xchangeRequest(method: string, url: string, options: any = {}) {
+    var req;
+
+    const promise = new Promise((resolve, reject) => {
+      function onResponse(err: Error, data: any) {
+        if (err) return reject(err);
+        resolve(data);
+      }
+
+      const opts: any = {
+        method,
+        headers: { 'Content-Type': 'application/json; charset=utf-8' }
+      };
+
+      if (method !== "GET" && options.data) {
+        opts.json = true;
+        opts.body = options.data;
+      }
+
+      req = request(url, opts, onResponse);
+    });
+
+    return abortable(promise, req);
+  }
 }

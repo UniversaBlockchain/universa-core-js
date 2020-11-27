@@ -2,6 +2,7 @@ export * from './universa_contract';
 import Capsule from './capsule';
 import Contract from './contract';
 import TransactionPack from './transaction_pack';
+import Parcel from './parcel';
 import HashId from './hash_id';
 import KeyRecord from './key_record';
 
@@ -20,6 +21,7 @@ export {
   Capsule,
   Contract,
   TransactionPack,
+  Parcel,
 
   HashId,
 

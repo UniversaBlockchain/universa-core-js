@@ -21,14 +21,11 @@ export default class Permission {
 
   static DefaultName: string;
 
-  static createLink(
-    roleName: string,
-    params: Params,
-    name: string
+  static makeLink(
+    name: string,
+    roleName: string
   ) {
-    const link = new RoleLink(`@${name}`, roleName);
-
-    return new Permission(link, params, name);
+    return new RoleLink(`@${name}`, roleName);
   }
 
   availableFor(options: AvailableForOptions) {

@@ -31,7 +31,7 @@ export default class ModifyDataPermission extends Permission implements BossSeri
     params: ModifyDataParams,
     name: string = ModifyDataPermission.DefaultName
   ) {
-    return this.createLink(roleName, params, name);
+    return new ModifyDataPermission(this.makeLink(name, roleName), params, name);
   }
 
   static deserializeFromBOSS(serialized: any): ModifyDataPermission {
@@ -40,3 +40,5 @@ export default class ModifyDataPermission extends Permission implements BossSeri
     return new ModifyDataPermission(serialized.role, params, serialized.name);
   }
 }
+
+Boss.register("ModifyDataPermission", ModifyDataPermission);

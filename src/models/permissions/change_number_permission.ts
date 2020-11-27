@@ -33,7 +33,7 @@ export default class ChangeNumberPermission extends Permission implements BossSe
     params: ChangeNumberParams,
     name: string = ChangeNumberPermission.DefaultName
   ) {
-    return this.createLink(roleName, params, name);
+    return new ChangeNumberPermission(this.makeLink(name, roleName), params, name);
   }
 
   static deserializeFromBOSS(serialized: any): ChangeNumberPermission {
@@ -42,3 +42,5 @@ export default class ChangeNumberPermission extends Permission implements BossSe
     return new ChangeNumberPermission(serialized.role, params, serialized.name);
   }
 }
+
+Boss.register("ChangeNumberPermission", ChangeNumberPermission);

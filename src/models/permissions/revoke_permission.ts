@@ -11,7 +11,7 @@ export default class RevokePermission extends Permission implements BossSerializ
   }
 
   static create(roleName: string, name: string = RevokePermission.DefaultName) {
-    return this.createLink(roleName, {}, name);
+    return new RevokePermission(this.makeLink(name, roleName), name);
   }
 
   static deserializeFromBOSS(serialized: any): RevokePermission {
@@ -19,6 +19,4 @@ export default class RevokePermission extends Permission implements BossSerializ
   }
 }
 
-Boss.register("RevokePermission",
-  RevokePermission as BossDeserializable<RevokePermission>
-);
+Boss.register("RevokePermission", RevokePermission);
