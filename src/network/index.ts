@@ -161,7 +161,7 @@ export default class Network {
     };
 
     return abortable(retry(run, {
-      attempts: 5,
+      attempts: 0,
       interval: 1000,
       onError: (e) => console.log(e, ` send command again`)
     }), req);
@@ -345,21 +345,25 @@ export default class Network {
     let response, error;
 
     try {
+      const paymentState1 = await self.checkContract(paymentId, connection);
+      console.log('payment state before approve parcel', paymentState1);
+
       response = await this.command('approveParcel',
         { packedItem },
         connection,
         { timeout: 3000 }
       );
     } catch (err) {
-      // console.log(err);
       error = err;
 
-      return this.registerParcel(parcel);
+      const paymentState2 = await self.checkContract(paymentId, connection);
+      console.log('payment state after approve parcel', paymentState2);
+
+      return { payment: paymentState2.itemResult, payload: "", packedItem };
+      // return this.registerParcel(parcel);
     }
 
-    // if (error) return { payment: "", payload: "" };
-    // console.log("got err:", response.result.errors);
-    await sleep(100);
+    // await sleep(100);
 
     const paymentState = await finalState(paymentId);
     const payloadState = await finalState(payloadId);

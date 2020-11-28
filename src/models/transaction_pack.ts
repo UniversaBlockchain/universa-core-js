@@ -106,6 +106,20 @@ export default class TransactionPack implements BossSerializable {
     };
   }
 
+  async addSubItem(itemPacked: Uint8Array) {
+    const item = Contract.unpack(itemPacked);
+    const hashId = await item.hashId();
+
+    this.subItems[hashId.base64] = item;
+  }
+
+  async addReferencedItem(itemPacked: Uint8Array) {
+    const item = Contract.unpack(itemPacked);
+    const hashId = await item.hashId();
+
+    this.referencedItems[hashId.base64] = item;
+  }
+
   async pack() {
     await this.ready;
 
@@ -155,7 +169,3 @@ export default class TransactionPack implements BossSerializable {
 }
 
 Boss.register("TransactionPack", TransactionPack);
-
-function loadReferences(refs: Array<Uint8Array> | null) {
-  return (refs || []).map(bin => new Contract(bin));
-}

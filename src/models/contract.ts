@@ -1,4 +1,4 @@
-import { Boss, KeyAddress, PublicKey, PrivateKey } from 'unicrypto';
+import { Boss, KeyAddress, PublicKey, PrivateKey, encode64 } from 'unicrypto';
 import Capsule from './capsule';
 import Reference from './reference';
 import { CreateCapsuleOptions } from './capsule';
@@ -79,10 +79,11 @@ export default class Contract {
     let i = 0;
     const signaturesTotal = this.signatures.length;
     const data = this.data;
+    const self = this;
 
     async function verify(index: number) {
       if (index >= signaturesTotal) return false;
-      const signature = this.signatures[index];
+      const signature = self.signatures[index];
 
       let pub = publicKey;
       if (!pub) {

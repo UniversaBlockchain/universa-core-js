@@ -17,7 +17,8 @@ import {
   PrivateKey,
   Network,
   Parcel,
-  Reference
+  Reference,
+  HashId
 } from '../src';
 
 import { UniversaContract } from '../src/models/universa_contract';
@@ -28,6 +29,10 @@ const pack2BIN = decode64("J0NzdWJJdGVtc6bEbhInI2RhdGHEUg4fG25ldwZDcmV2b2tpbmcdQ
 // 4096
 const keyBin = decode64("HhisGAUQuCAAuPpkMr8wf6f/jCb2p1+5xDwCU25f/m3Q7dh3R31OUfD+WvAtDga1aifgufNudMwZREU6yiqADUIEBsELX6kFEHn0hd5zsniIoGchIhMWeaQ+F2EzB7wkK742QoY4mlbJpCsNzc8ehr/MsD19a8Im0YdJ4t1gudvQE7h+tRrImh+CLIN4FpHtvT0ZNroDKnNCnimOPbfe0jFip3cnC6bGdEvvpkLVJwWs1OQa6kkPBrdCMI3NrTlk21qxMu/ySukeRhCGsSp+KprNWinUWrVqfKmWkrKdLLePlyY+HB6sQkIBmZ7PbVd3nejRiTGeswOR+ZTHOvE4t5afVq+dfmWFsNlEGCQvKmwUqxPIw+kw5IcUdZrat0DvsJ2rDS6LwlnaNBLoEd7EgaPcI3lvjwuQ8XjCBQ05YrHwegTkLv6djqwfooS6ip4wCMmwPG1t294hP5BXcJ/i1uv2pkNdEQMacPbXjiPw0d5v0S02/VJv9oJ3NWLqtMhxgjFAhuKyzyz/0gqpQllW9zJrYQop3oNv1l6v0+FMo5ITfqB+NvuX5LjSYXimKLnj7BqwO4lVfOTaTehHaNGuBW4JqC5F3eRx1YWFmIM6VHlsXJ9KzmK9nSA1mDJe1v3GNq7bd8GDGsF89ROB2M44p8yN9tJnXIGn/pxB+7/2sB9suUcxgykkTePnnpIoo1AdoWppTG/qNtXDi0amhy3XwOg0kDQg60JNW4mo5did7Z6vkTPufi9yFcW+H3s9JB1IssbETopHDJ80Vl+xYAozLvEKxbectXw");
 const keyPassword = "81bf60af-703c-4c28-8fc7-878860089df5";
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 function openTP(filePath: string) {
   const fs = require('fs');
@@ -60,7 +65,7 @@ function saveParcel(filePath: string, parcel: Parcel) {
 }
 
 describe('Contract', () => {
-  it('[WIP] should create universa contract (unit)', async() => {
+  it.skip('[WIP] should create universa contract (unit)', async() => {
     const privateKey = await PrivateKey.unpack({ bin: keyBin, password: keyPassword });
     const issuer = new RoleSimple('issuer', { keys: [privateKey.publicKey] });
     const contract = UniversaContract.create(issuer);
@@ -83,7 +88,7 @@ describe('Contract', () => {
     }));
   });
 
-  it('[WIP] should create capsule (unit)', async() => {
+  it.skip('[WIP] should create capsule (unit)', async() => {
     const privateKey = await PrivateKey.unpack({ bin: keyBin, password: keyPassword });
     const issuer = new RoleSimple('issuer', { keys: [privateKey.publicKey] });
 
@@ -111,7 +116,7 @@ describe('Contract', () => {
     });
   });
 
-  it('[WIP] should create contract (unit)', async() => {
+  it.skip('[WIP] should create contract (unit)', async() => {
     const privateKey = await PrivateKey.unpack({ bin: keyBin, password: keyPassword });
     const issuer = new RoleSimple('issuer', { addresses: [privateKey.publicKey.shortAddress] });
 
@@ -153,7 +158,7 @@ describe('Contract', () => {
   });
 
   it.skip('should read references', async() => {
-    const pack = openTP(`/contracts/mark3.tx.unicon`);
+    const pack = openTP(`/contracts/seed/mark3.tx.unicon`);
     await pack.ready;
 
     const refs = pack.contract.capsule.contract.definition.references;
@@ -163,25 +168,117 @@ describe('Contract', () => {
     const ref = new Reference('my_ref', Reference.TYPE_TRANSACTIONAL, where);
 
     const contract = pack.contract;
-    console.log(contract.transactional);
+    // console.log(contract.transactional);
+    console.log(contract.definition);
     contract.createTransactional('');
     contract.addReference(ref);
-    console.log("ADDED REF");
-    // contract.transactional.id = shortId();
-    console.log(contract.transactional);
+  });
 
-
-    // console.log(pack.contract.capsule.contract.definition.references[0]);
-
-    // console.log(pack);
+  it.skip('should read upack', async() => {
+    const uPack = openTP(`/contracts/payment/upack.1.unicon`);
+    console.log(uPack.contract.state);
   });
 
   it.only('should register contract with references', async() => {
+    const uKey = await openKey('/contracts/keys/ukey.private.unikey');
+    const keyA = await openKey('/contracts/keys/keyA2048.private.unikey');
+    const keyB = await openKey('/contracts/keys/keyB2048.private.unikey');
+    const uPack = openTP(`/contracts/payment/upack.${1}.unicon`);
+    const conAOld = openTP(`/contracts/result/contractA.unicon`);
+    const network = new Network(uKey);
 
+    try { await network.connect(); }
+    catch (err) { console.log("network connection error: ", err); }
+
+    const contractB = await createContract({ mark: "B" }, keyA);
+    const contractA = await createContract({ mark: "A" }, keyA);
+
+    const contractBBin = await contractB.pack();
+    const contractBId = await contractB.hashId();
+    contractA.capsule.new.push(contractBId);
+
+    const conAOldId = await conAOld.contract.hashId();
+    // console.log(conAOldId, conAOldId.base64);
+    const failedId = new HashId(decode64("5TVahgOGfMbc8Ccyr3NN0PvjwtIkEZ4cZwwhNWJWRGn0T8o/DdWIZMWb+BLj0c1+RsMAT2GHyOexgpPynqCoXr3CUdF7oJ3kZCUbDy1qdPjRKL3PAYCIpHl2W1/9wobh"));
+    const okId = new HashId(decode64("Skdg4+nPiHFRc7cfwbiatjXPrdKaJHLhvYUAa9QpkBW376Czwujog8vcQVEYyYh9VdnjcpY6mg9lQAYCmMs0tfkoZJGrccuvJG07ZLL3MTuw8sOraONZKCOe32vrjNrP"));
+    // console.log(contractBId, contractBId.base64);
+
+    // This causes error
+    // contractA.definition.data['id'] = okId;
+    // This works
+    contractA.definition.data['id'] = contractBId;
+
+    // const where = { all_of: [ 'ref.id==this.definition.data.contractAId' ] };
+    // const ref = new Reference('my_ref', Reference.TYPE_EXISTING_DEFINITION, where);
+    // const ref = new Reference('my_ref', Reference.TYPE_TRANSACTIONAL, where);
+    // contractA.createTransactional('');
+    // contractA.addReference(ref);
+    // console.log(contractA.definition);
+    contractA.packData();
+    await contractA.sign(keyA);
+    // await contractA.sign(keyB);
+
+    const contractABin = contractA.pack();
+
+    // const packA = new TransactionPack(contractABin);
+    // const packABin = await packA.pack();
+    // saveTP('/contracts/result/contractA.unicon', packABin);
+    // const packB = new TransactionPack(contractBBin);
+    // const packBBin = await packB.pack();
+    // saveTP('/contracts/result/contractB.unicon', packBBin);
+
+    const tpack = new TransactionPack(contractABin);
+    await tpack.addSubItem(contractBBin);
+    // await tpack.addReferencedItem(conAOld.contract.binary as Uint8Array);
+
+    const costs = await Network.getCost(tpack);
+    console.log(costs);
+
+    const payment = await Parcel.createPayment(costs.costInTu, uPack, {
+      isTestnet: true,
+      createdAt: network.now()
+    });
+    await payment.sign(uKey);
+
+    const tpackBIN = await tpack.pack();
+    const paymentBin = await payment.pack();
+
+    // SAVE DRAFT CONTRACT BEFORE REGISTRATION
+    saveTP('/contracts/result/tpack.unicon', tpackBIN);
+    // SAVE DRAFT PAYMENT BEFORE REGISTRATION
+    saveTP(`/contracts/payment/upack.temp.unicon`, paymentBin);
+
+    const parcel = await Parcel.create(paymentBin, tpackBIN);
+    // console.log("sleep 5 sec");
+    // await sleep(5000);
+    const response = await network.registerParcel(parcel);
+    console.log(response.payment.state, response.payload.state, response.payload.errors);
+
+    if (response.payment.state === 'APPROVED')
+      saveTP(`/contracts/payment/upack.1.unicon`, paymentBin);
+
+    if (response.packedItem)
+      saveTP('/contracts/result/failed_parcel.unicon', response.packedItem as Uint8Array);
+
+    async function createContract(data: any, key: PrivateKey) {
+      const issuer = new RoleSimple('issuer', {
+        addresses: [key.publicKey.shortAddress]
+      });
+
+      const contract = Contract.create(issuer, {
+        definitionData: data,
+        expiresAt: '3m',
+        createdAt: network.now()
+      });
+
+      // await contract.sign(key);
+
+      return contract;
+    }
   });
 
   it.skip('should register contract', async() => {
-    const upackNum = 4;
+    const upackNum = 1;
     // const myContractKey = await PrivateKey.unpack({ bin: keyBin, password: keyPassword });
     const uKey = await openKey('/contracts/core.private.unikey');
     const upack = openTP(`/contracts/upack${upackNum}.unicon`);

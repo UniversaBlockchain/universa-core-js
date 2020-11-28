@@ -1,57 +1,37 @@
 ## universa-core
-
 Tools to perform basic operations with Universa networks and contracts
 
 ## Installation
-
 ### Node.js
-
 For usage in an existing Node.js project, add it to your dependencies:
-
 ```
 $ npm install universa-core
 ```
-
 or with yarn:
-
 ```
 $ yarn add universa-core
 ```
-
-
 And use it with the following line wherever you need it:
-
 ```javascript
 import { Network } from 'universa-core';
 ```
 
 ### Web
-
 In root folder of package run
-
 ```bash
 npm install
 npm run build
 ```
-
-In folder `dist` (public/js, build) there will be `uni.%version%.min.js` and `crypto.%version%.wasm`.
-
-Simply copy two files to wherever you keep your vendor scripts and include
-it as a script:
-
+In folder `dist` (public/js, build) there will be `uni.%version%.min.js` and `crypto.%version%.wasm`. Simply copy two files to wherever you keep your vendor scripts and include it as a script:
 ```html
 <script src="path/to/uni.min.js"></script>
 <script> const generator = Uni.PrivateKey.generate({ strength: 2048 }); </script>
 ```
 
 ## Contract
-
 ### Basic models
-
 #### KeyRecord
-
 KeyRecord is PublicKey container extended with extra data
-
 ```js
 import { PublicKey, KeyRecord } from 'universa-core';
 
@@ -63,9 +43,7 @@ record.extra.comment === "this is key record"; // true
 ```
 
 ### Roles
-
 #### Availability for keys/addresses
-
 ```js
 const isAvailable1 = await role.availableFor({ keys: [publicKey] });
 const isAvailable2 = await role.availableFor({ addresses: [publicKey.shortAddress] });
@@ -85,7 +63,6 @@ const pub2: PublicKey;
 const role = new RoleSimple("director", { addresses: [pub.shortAddress, pub2.longAddress] });
 const role = new RoleSimple("assistant", { keys: [pub, pub2] });
 ```
-
 Also, you can create simple role with KeyRecord
 ```js
 import {
@@ -101,7 +78,6 @@ const role = new RoleSimple("director", { keyRecords: [record] });
 
 #### Role Link
 Create role that links to other role
-
 ```js
 import { RoleLink, RoleSimple } from 'universa-core';
 
@@ -132,7 +108,6 @@ const list2 = new RoleList("founder", {
   roleNames: [link1.name, link2.name, simple1.name]
 });
 ```
-
 ALL mode to create role that available only if all roles from list available
 ```js
 import { RoleList, RoleLink, RoleSimple } from 'universa-core';
@@ -146,7 +121,6 @@ const list1 = new RoleList("founder", {
   roles: [link1, link2, simple1]
 });
 ```
-
 QUORUM mode to make role available if at least quorumSize(number) roles is available
 ```js
 import { RoleList, RoleLink, RoleSimple } from 'universa-core';
@@ -166,7 +140,6 @@ const list1 = new RoleList("founder", {
 ### Permissions
 #### Revoke permission
 Revoke permission grants permission to revoke contract to specific role
-
 ```js
 import { RevokePermission } from 'universa-core';
 
@@ -181,7 +154,6 @@ const revoke2 = RevokePermission.create("owner");
 
 #### Change owner permission
 Change owner permission grants permission to change owner of contract
-
 ```js
 import { ChangeOwnerPermission } from 'universa-core';
 
@@ -196,7 +168,6 @@ const changeOwner2 = ChangeOwnerPermission.create("admin");
 
 #### Change number permission
 Change number permission grants permission to change number value of the specific field in state.data section of contract
-
 ```js
 import { ChangeNumberPermission } from 'universa-core';
 
@@ -221,7 +192,6 @@ console.log(changeNumber.params); // params
 
 #### Modify data permission
 Modify data permission grants permission to change multitype value of the specific field in state.data section of contract with fixed set of values
-
 ```js
 import { ModifyDataPermission } from 'universa-core';
 
@@ -247,7 +217,6 @@ console.log(modifyData.params); // params
 
 #### Split / join permission
 Split / join permission grants permission to split or join contracts by specific number field when some of contract attribures are the same
-
 ```js
 import { SplitJoinPermission } from 'universa-core';
 
@@ -269,13 +238,75 @@ const splitJoin2 = SplitJoinPermission.create("admin", params);
 console.log(splitJoin.params); // params
 ```
 
-### Transaction Pack
+### Transaction
+Create transactional section with given ID
+```js
+const contract; // Contract instance
+contract.createTransactional("myUniqueId"); // creates empty transactional section with id
+console.log(contract.transactional); // { id: "myUniqueId" }
+```
+Set transactional section to null
+```js
+const contract; // Contract instance
+contract.resetTransactional();
+console.log(contract.transactional); // null
+```
 
+### References
+To create definition and state references, use types Reference.TYPE_EXISTING_DEFINITION, Reference.TYPE_EXISTING_STATE
+```js
+import { Reference } from 'universa-core';
+
+// example of where condition
+const name = 'my_reference';
+const type = Reference.TYPE_TRANSACTIONAL; // transactional reference
+const where = { all_of: [ 'ref.id==this.definition.data.my_first_id' ] };
+const refTransactional = new Reference(name, type, where);
+
+console.log(refTransactional.name); // 'my_reference'
+console.log(refTransactional.where); // { all_of: [ 'ref.id==this.definition.data.my_first_id' ] }
+console.log(refTransactional.type); // Reference.TYPE_TRANSACTIONAL
+```
+Add reference to contract
+```js
+import { Reference } from 'universa-core';
+
+const contract; // Contract instance
+const name = 'my_reference';
+const type = Reference.TYPE_EXISTING_DEFINITION; // definition reference
+const where = { all_of: [ 'ref.id==this.definition.data.my_first_id' ] };
+const refDefinition = new Reference(name, type, where);
+
+contract.addReference(refDefinition); // adds reference to definition.references
+console.log(contract.definition.references); // [Reference]
+```
+Modifying extra parameters
+```js
+import { Reference } from 'universa-core';
+
+const name = 'my_reference';
+const type = Reference.TYPE_EXISTING_STATE; // definition reference
+const where = { all_of: [ 'ref.id==this.definition.data.my_first_id' ] };
+const ref = new Reference(name, type, where);
+
+// here's some defaultls
+console.log(ref.fields); // []
+console.log(ref.roles); // []
+console.log(ref.signedBy); // []
+console.log(ref.transactionalId); // ''
+console.log(ref.required); // true
+
+// modify values
+ref.required = false;
+ref.transactionalId = 'some_id';
+```
+
+## Transaction Pack
 Load transaction pack from binary
 ```js
 import { TransactionPack, Boss } from 'universa-core';
 
-const tpackBinary: Uint8Array;
+const tpackBinary; // Uint8Array;
 const tpack = Boss.load(tpackBinary) as TransactionPack;
 
 tpack.contract // main contract
@@ -283,39 +314,54 @@ tpack.contract // main contract
 // Get parent of main contract
 const parent = await tpack.getItem(tpack.contract.parent);
 ```
-
 Sign transaction pack's main contract
 ```js
 import { TransactionPack, Boss } from 'universa-core';
 
-const tpackBinary: Uint8Array;
+const tpackBinary; // Uint8Array;
 const tpack = Boss.load(tpackBinary);
 
 tpack.sign(privateKey); // some PrivateKey instance to sign
 ```
-
 Get tagged contract
 ```js
 import { TransactionPack, Boss } from 'universa-core';
 
-const tpackBinary: Uint8Array;
+const tpackBinary; // Uint8Array;
 const tpack = Boss.load(tpackBinary);
 
-const contract = await tpack.getTag("sometag");
+const contract = await tpack.getTag("sometag"); // Contract instance
 ```
-
 Add tag
 ```js
 import { TransactionPack, Boss } from 'universa-core';
 
-const tpackBinary: Uint8Array;
+const tpackBinary; // Uint8Array;
 const tpack = Boss.load(tpackBinary);
 
 await tpack.addTag("mytag", hashId); // some HashId instance
 ```
+Add subItem
+```js
+import { TransactionPack, Boss } from 'universa-core';
 
-### Contract
+const tpackBinary; // Uint8Array;
+const contractBinary; // Uint8Array, packed Contract instance
+const tpack = Boss.load(tpackBinary); // TransactionPack instance
 
+await tpack.addSubItem(contractBinary); // some HashId instance
+```
+Add referencedItem
+```js
+import { TransactionPack, Boss } from 'universa-core';
+
+const tpackBinary; // Uint8Array;
+const contractBinary; // Uint8Array, packed Contract instance
+const tpack = Boss.load(tpackBinary); // TransactionPack instance
+
+await tpack.addReferencedItem(contractBinary); // some HashId instance
+```
+Main Contract
 ```js
 const main = tpack.contract;
 
@@ -331,11 +377,8 @@ main.state // state
 ```
 
 ## Network
-
 ### Connecting to network
-
 Connect to network with default topology
-
 ```js
 import { Network, PrivateKey } from 'universa-core';
 
@@ -349,9 +392,7 @@ catch (err) { console.log("network connection error: ", err); }
 try { response = await network.command("sping"); }
 catch (err) { console.log("on network command:", err); }
 ```
-
 Connect to network with topology, provided by file path
-
 ```js
 import { Network, PrivateKey } from 'universa-core';
 
@@ -367,9 +408,7 @@ catch (err) { console.log("network connection error: ", err); }
 try { response = await network.command("sping"); }
 catch (err) { console.log("on network command:", err); }
 ```
-
 Connect to network with provided topology
-
 ```js
 import { Network, PrivateKey, Topology } from 'universa-core';
 
@@ -385,9 +424,7 @@ catch (err) { console.log("network connection error: ", err); }
 try { response = await network.command("sping"); }
 catch (err) { console.log("on network command:", err); }
 ```
-
 (Browser only) Connect to network and save topology to localStorage
-
 ```js
 import { Network, PrivateKey } from 'universa-core';
 
@@ -403,9 +440,7 @@ catch (err) { console.log("network connection error: ", err); }
 try { response = await network.command("sping"); }
 catch (err) { console.log("on network command:", err); }
 ```
-
 Connect to network with direct connections (http/ip) to nodes
-
 ```js
 import { Network, PrivateKey } from 'universa-core';
 
@@ -423,7 +458,6 @@ catch (err) { console.log("on network command:", err); }
 ```
 
 ### Topology
-
 Load topology from file
 ```js
 import { Topology } from 'universa-core';
@@ -465,7 +499,6 @@ fs.writeFile('mainnet.json', json);
 ```
 
 ### Running commands
-
 network.command(commandName, parameters) - returns Promise with result
 
 ```js
@@ -488,7 +521,6 @@ catch (err) { console.log("on network command:", err); }
 ```
 
 ### Check full contract status
-
 Special command to check contract status over network
 isApproved(contractId, trustLevel: Double) // Promise[Boolean]
 
@@ -510,7 +542,6 @@ catch (err) { console.log("on network command:", err); }
 ```
 
 ### Get network current time
-
 Contract revisions that contain state.createdAt time far in past or future will be declined. To avoid this, it's recommended to use network current time while creating revisions.
 
 To load network time and use current timestamp:
@@ -537,7 +568,6 @@ const createdAt = network.now(); // Date (network current time)
 ```
 
 ### Calculate transaction pack registration cost
-
 To make payment you need to request it's costs first:
 ```js
 const tpack; // TransactionPack instance
@@ -546,18 +576,19 @@ console.log(costs); // { costInTu: 1, cost: 1, testnetCompatible: true }
 ```
 
 ## Parcel
-
 Parcel is special object used to register contract with U payment.
 
 To create payment
 ```js
+import { Network, Parcel } from 'universa-core';
+
 const tpack; // TransactionPack instance to register
 const upack; // TransactionPack instance of you U package contract
 
 const costs = await Network.getCost(tpack);
-// Create payment to register in TestNet
+// Create payment to register in TestNet (paymentTest is TransactionPack instance)
 const paymentTest = await Parcel.createPayment(costs.costInTu, upack, { isTestnet: true });
-// or in MainNet
+// or in MainNet (paymentMain is TransactionPack instance)
 const paymentMain = await Parcel.createPayment(costs.cost, upack, {
   createdAt: network.now() // Network instance with loaded time offset
 });
@@ -567,10 +598,10 @@ await paymentTest.sign(uKey); // uKey is upack owner's PrivateKey
 // ALWAYS SAVE DRAFT PAYMENT BEFORE REGISTRATION
 const paymentTestBin = await paymentTest.pack(); // TransactionPack binary
 ```
-
 To create parcel
 ```js
 const tpackToRegister; // TransactionPack instance to register
+const tpackToRegisterBin = await tpackToRegister.pack();
 
 const parcel = await Parcel.create(paymentBin, tpackToRegisterBin);
 ```
@@ -584,7 +615,6 @@ console.log(result.payment, result.payload); // shows itemResult for each pack
 ```
 
 ## Full example for creating and register your own unit contract
-
 ```js
 const uPack; // U package TransactionPack instance, last revision
 const uKey; // PrivateKey instance, uPack owner's key
