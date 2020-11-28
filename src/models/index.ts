@@ -3,6 +3,7 @@ import Capsule from './capsule';
 import Contract from './contract';
 import TransactionPack from './transaction_pack';
 import Parcel from './parcel';
+import Reference from './reference';
 import HashId from './hash_id';
 import KeyRecord from './key_record';
 
@@ -22,6 +23,7 @@ export {
   Contract,
   TransactionPack,
   Parcel,
+  Reference,
 
   HashId,
 

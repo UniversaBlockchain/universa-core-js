@@ -2,6 +2,7 @@ import { Boss, BossSerializable, shortId } from 'unicrypto';
 import { Role, RoleDictionary } from './roles/role';
 import RoleLink from './roles/role_link';
 import HashId from './hash_id';
+import Reference from './reference';
 import Permission from './permissions/permission';
 import RevokePermission from './permissions/revoke_permission';
 
@@ -16,7 +17,7 @@ export interface State {
   parent: HashId | null,
   origin: HashId | null,
   branchId?: string | null,
-  references: any
+  references?: Array<Reference>
 }
 
 export interface Definition {
@@ -24,13 +25,14 @@ export interface Definition {
   permissions: { [id: string]: Permission },
   createdAt: Date,
   data: any,
-  references: any
+  references?: Array<Reference>
 }
 
 interface UniversaContractSerialized {
   api_level: number,
   definition: any,
-  state: any
+  state: any,
+  transactional?: any
 }
 
 interface ContractCreateOptions {
@@ -60,11 +62,18 @@ export class UniversaContract implements BossSerializable {
   apiLevel: number;
   definition: Definition;
   state: State;
+  transactional: any;
 
-  constructor(apiLevel: number, definition: Definition, state: State) {
+  constructor(
+    apiLevel: number,
+    definition: Definition,
+    state: State,
+    transactional: any
+  ) {
     this.apiLevel = apiLevel;
     this.definition = definition;
     this.state = state;
+    this.transactional = transactional;
   }
 
   static create(issuer: Role, options?: ContractCreateOptions) {
@@ -112,7 +121,7 @@ export class UniversaContract implements BossSerializable {
       references: []
     };
 
-    return new UniversaContract(DEFAULT_API_LEVEL, definition, state);
+    return new UniversaContract(DEFAULT_API_LEVEL, definition, state, null);
   }
 
   get issuer() { return this.definition.issuer; }
@@ -167,11 +176,16 @@ export class UniversaContract implements BossSerializable {
       'references': s.references
     };
 
-    return {
+    const serialized: UniversaContractSerialized = {
       api_level: this.apiLevel,
       definition: definitionSerialized,
       state: stateSerialized
     };
+
+    if (this.transactional || this.transactional !== null)
+      serialized.transactional = this.transactional;
+
+    return serialized;
   }
 
   static deserializeFromBOSS(
@@ -204,10 +218,35 @@ export class UniversaContract implements BossSerializable {
       parent: rawState.parent,
       origin: rawState.origin,
       branchId: rawState['branch_id'],
-      references: rawState['references'] || []
+      references: rawState.references || []
     };
 
-    return new UniversaContract(apiLevel, definition, state);
+    return new UniversaContract(apiLevel, definition, state, serialized.transactional);
+  }
+
+  resetTransactional() { this.transactional = null; }
+  createTransactional(id: string | null) {
+    this.transactional = { id };
+  }
+
+  addReference(ref: Reference) {
+    if (ref.type === Reference.TYPE_TRANSACTIONAL && !this.transactional)
+      throw new Error('Can\'t add transactional reference: transaction is empty');
+
+    if (ref.type === Reference.TYPE_TRANSACTIONAL) {
+      this.transactional.references = this.transactional.references || [];
+      this.transactional.references.push(ref);
+    }
+
+    if (ref.type === Reference.TYPE_EXISTING_DEFINITION) {
+      this.definition.references = this.definition.references || [];
+      this.definition.references.push(ref);
+    }
+
+    if (ref.type === Reference.TYPE_EXISTING_STATE) {
+      this.state.references = this.state.references || [];
+      this.state.references.push(ref);
+    }
   }
 }
 

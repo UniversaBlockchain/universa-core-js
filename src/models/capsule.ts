@@ -63,6 +63,7 @@ export default class Capsule {
 
   get definition() { return this.contract.definition; }
   get state() { return this.contract.state; }
+  get transactional() { return this.contract.transactional; }
 
   pack() {
     return Boss.dump({

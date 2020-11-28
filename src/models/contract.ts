@@ -1,5 +1,6 @@
 import { Boss, KeyAddress, PublicKey, PrivateKey } from 'unicrypto';
 import Capsule from './capsule';
+import Reference from './reference';
 import { CreateCapsuleOptions } from './capsule';
 import HashId from './hash_id';
 import { Role } from './roles/role';
@@ -49,7 +50,8 @@ export default class Contract {
   get origin() { return this.capsule.origin; }
 
   get definition() { return this.capsule.definition; }
-  get state() {return this.capsule.state; }
+  get state() { return this.capsule.state; }
+  get transactional() { return this.capsule.transactional; }
 
   hashId() {
     if (this.binary) return HashId.calculate(this.binary);
@@ -161,5 +163,14 @@ export default class Contract {
       version: raw.version,
       binary
     });
+  }
+
+  resetTransactional() { this.capsule.contract.resetTransactional(); }
+  createTransactional(id: string | null) {
+    this.capsule.contract.createTransactional(id);
+  }
+
+  addReference(ref: Reference) {
+    this.capsule.contract.addReference(ref);
   }
 }

@@ -4,6 +4,7 @@ import 'mocha';
 import {
   encode64,
   decode64,
+  shortId,
   TransactionPack,
   Capsule,
   Contract,
@@ -15,7 +16,8 @@ import {
   PublicKey,
   PrivateKey,
   Network,
-  Parcel
+  Parcel,
+  Reference
 } from '../src';
 
 import { UniversaContract } from '../src/models/universa_contract';
@@ -154,12 +156,32 @@ describe('Contract', () => {
     const pack = openTP(`/contracts/mark3.tx.unicon`);
     await pack.ready;
 
+    const refs = pack.contract.capsule.contract.definition.references;
+    if (refs && refs.length) console.log(refs[0].where);
 
-    console.log(pack);
+    const where = { all_of: [ 'ref.id==this.definition.data.my_first_id' ] };
+    const ref = new Reference('my_ref', Reference.TYPE_TRANSACTIONAL, where);
+
+    const contract = pack.contract;
+    console.log(contract.transactional);
+    contract.createTransactional('');
+    contract.addReference(ref);
+    console.log("ADDED REF");
+    // contract.transactional.id = shortId();
+    console.log(contract.transactional);
+
+
+    // console.log(pack.contract.capsule.contract.definition.references[0]);
+
+    // console.log(pack);
   });
 
-  it.only('should register contract', async() => {
-    const upackNum = 3;
+  it.only('should register contract with references', async() => {
+
+  });
+
+  it.skip('should register contract', async() => {
+    const upackNum = 4;
     // const myContractKey = await PrivateKey.unpack({ bin: keyBin, password: keyPassword });
     const uKey = await openKey('/contracts/core.private.unikey');
     const upack = openTP(`/contracts/upack${upackNum}.unicon`);
@@ -224,6 +246,8 @@ describe('Contract', () => {
         expiresAt: '3m',
         createdAt: network.now()
       });
+
+      // contract.
 
       await contract.sign(key);
 
