@@ -26,7 +26,7 @@ describe('Roles', () => {
       const role = new RoleSimple("owner", { addresses: [pub.shortAddress] });
       const packed = Boss.dump(role);
 
-      expect(encode64(packed)).to.equal("JyNuYW1lK293bmVyI2tleXMGS2FkZHJlc3Nlcw4XQ3VhZGRyZXNzvCUQuGLijoSylhFzt+uhvgJ5em4gvVKyF4Tpw/g0otMmPYc2SWr4G19fdFNLZXlBZGRyZXNzXVNTaW1wbGVSb2xl");
+      expect(encode64(packed)).to.equal("LyNuYW1lK293bmVyI2tleXMGS2FkZHJlc3Nlcw4XQ3VhZGRyZXNzvCUQuGLijoSylhFzt+uhvgJ5em4gvVKyF4Tpw/g0otMmPYc2SWr4M19fdHlwZVNLZXlBZGRyZXNzO2Fub25JZHMGXVNTaW1wbGVSb2xl");
     });
 
     it('should read RoleSimple', async () => {
@@ -108,7 +108,7 @@ describe('Roles', () => {
       const linkRole = new RoleLink("director", simpleRole.name);
       const linkPacked = Boss.dump(linkRole);
 
-      expect(encode64(linkPacked)).to.equal("HyNuYW1lQ2RpcmVjdG9yW3RhcmdldF9uYW1lK293bmVyG19fdENSb2xlTGluaw==");
+      expect(encode64(linkPacked)).to.equal("HyNuYW1lQ2RpcmVjdG9yW3RhcmdldF9uYW1lK293bmVyM19fdHlwZUNSb2xlTGluaw==");
     });
 
     it('should be available for correct keys', async () => {
@@ -291,7 +291,7 @@ describe('Roles', () => {
 
       const packed = encode64(Boss.dump(list));
 
-      expect(packed).to.equal("LyNuYW1lK293bmVyI21vZGUzUVVPUlVNK3JvbGVzJicVS2RpcmVjdG9yMSNrZXlzBkthZGRyZXNzZXMOF0N1YWRkcmVzc7wlEDZAPdRMfQR2zj14GXecaluvU9kfGwCVdBaJdjAGvFhD8YrDSBtfX3RTS2V5QWRkcmVzc41TU2ltcGxlUm9sZScVS2RpcmVjdG9yMlUGZQ4XfbwlEJ1g30ZWY/ivXwe0FTPneMYqYEQ+/zLi2R3h7FcJHT1EkZvziI2VjZ0fFUtkaXJlY3RvcjNbdGFyZ2V0X25hbWWtjUNSb2xlTGluaycVS2Fzc2lzdGFudFUGZQ4XfbwlEPsyIKZCjyxVOxZpgjAnL91j/vLUHKKZoJt5FjjE+i3MsPr/yI2VjZ1TcXVvcnVtU2l6ZRiNQ1JvbGVMaXN0");
+      expect(packed).to.equal("LyNuYW1lK293bmVyI21vZGUzUVVPUlVNK3JvbGVzJi8VS2RpcmVjdG9yMSNrZXlzBkthZGRyZXNzZXMOF0N1YWRkcmVzc7wlEDZAPdRMfQR2zj14GXecaluvU9kfGwCVdBaJdjAGvFhD8YrDSDNfX3R5cGVTS2V5QWRkcmVzczthbm9uSWRzBo1TU2ltcGxlUm9sZS8VS2RpcmVjdG9yMlUGZQ4XfbwlEJ1g30ZWY/ivXwe0FTPneMYqYEQ+/zLi2R3h7FcJHT1EkZvziI2VnQaNrR8VS2RpcmVjdG9yM1t0YXJnZXRfbmFtZb0XjUNSb2xlTGluay8VS2Fzc2lzdGFudFUGZQ4XfbwlEPsyIKZCjyxVOxZpgjAnL91j/vLUHKKZoJt5FjjE+i3MsPr/yI2VnQaNrVNxdW9ydW1TaXplGI1DUm9sZUxpc3Q=");
     });
 
     it('should read list role', async () => {

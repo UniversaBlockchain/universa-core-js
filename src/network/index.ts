@@ -161,7 +161,7 @@ export default class Network {
     };
 
     return abortable(retry(run, {
-      attempts: 0,
+      attempts: 5,
       interval: 1000,
       onError: (e) => console.log(e, ` send command again`)
     }), req);
@@ -327,7 +327,6 @@ export default class Network {
     const binary = await tpack.pack();
     const data = { packedContract: encode64(binary) };
 
-
     return NodeConnection.xchangeRequest('POST', url, { data });
   }
 
@@ -341,13 +340,10 @@ export default class Network {
     const payloadId = await parcel.payload.contract.hashId();
 
     if (!paymentId || !payloadId) throw new Error('payment or payload wasn\'t saved!');
-    // console.log("send command approve parcel");
+
     let response, error;
 
     try {
-      const paymentState1 = await self.checkContract(paymentId, connection);
-      console.log('payment state before approve parcel', paymentState1);
-
       response = await this.command('approveParcel',
         { packedItem },
         connection,
@@ -356,14 +352,8 @@ export default class Network {
     } catch (err) {
       error = err;
 
-      const paymentState2 = await self.checkContract(paymentId, connection);
-      console.log('payment state after approve parcel', paymentState2);
-
-      return { payment: paymentState2.itemResult, payload: "", packedItem };
-      // return this.registerParcel(parcel);
+      return this.registerParcel(parcel);
     }
-
-    // await sleep(100);
 
     const paymentState = await finalState(paymentId);
     const payloadState = await finalState(payloadId);

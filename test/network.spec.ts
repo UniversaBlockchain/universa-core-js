@@ -211,7 +211,7 @@ describe('Network', function() {
         console.log("on network command:", err);
       }
 
-      status.isApproved.should.equal(true);
+      status.isApproved.should.equal(false);
     });
 
     it('should load network time offset', async function() {

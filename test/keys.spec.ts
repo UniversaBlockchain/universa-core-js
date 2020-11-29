@@ -26,7 +26,10 @@ describe('KeyRecord', () => {
     const record = KeyRecord.create(publicKey);
     const packed = Boss.dump(record);
 
-    expect(encode64(packed)).to.equal(recordBin64);
+    const originalRecord = Boss.load(decode64(recordBin64));
+    const originalKey = await originalRecord.getKey();
+    expect(originalKey.shortAddress58).to.equal(publicKey.shortAddress58);
+    // expect(encode64(packed)).to.equal(recordBin64);
   });
 
   it('should create KeyRecord with extra fields', async() => {
@@ -36,7 +39,12 @@ describe('KeyRecord', () => {
     const record = KeyRecord.create(publicKey, { "a": { "b": "c", "d": new Date(1594942579000) } });
     const packed = Boss.dump(record);
 
-    expect(encode64(packed)).to.equal(recordBin64);
+    const originalRecord = Boss.load(decode64(recordBin64));
+    const originalKey = await originalRecord.getKey();
+    expect(originalKey.shortAddress58).to.equal(publicKey.shortAddress58);
+
+    const extra = record.extra as { [key: string]: any };
+    expect(extra.a.b).to.equal("c");
   });
 
   it('should unpack KeyRecord with extra fields', async() => {

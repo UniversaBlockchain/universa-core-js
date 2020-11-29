@@ -175,11 +175,145 @@ describe('Contract', () => {
   });
 
   it.skip('should read upack', async() => {
-    const uPack = openTP(`/contracts/payment/upack.1.unicon`);
+    const uPack = openTP(`/contracts/payment/upack.temp.unicon`);
     console.log(uPack.contract.state);
+
+    const tpack = decode64("L0Njb250cmFjdMSDBScjZGF0YcSrAh9DY29udHJhY3QvS2FwaV9sZXZlbCBTZGVmaW5pdGlvbi8zaXNzdWVyLyNuYW1lPSNrZXlzBkthZGRyZXNzZXMOF0N1YWRkcmVzc7wlEDJ6iU/BVwVoZG/xH7KHl8nPFx/TgC95u4Nw53F1jTZdIAZnLDNfX3R5cGVTS2V5QWRkcmVzczthbm9uSWRzBo1TU2ltcGxlUm9sZVtwZXJtaXNzaW9ucw8zYU0yOE91H00zcmV2b2tlI3JvbGUfTTtAcmV2b2tlW3RhcmdldF9uYW1lK293bmVyjUNSb2xlTGlua42DUmV2b2tlUGVybWlzc2lvblNjcmVhdGVkX2F0eQ4FCX6FI2RhdGEPI21hcmsLQVNyZWZlcmVuY2VzDk8zZmllbGRzBityb2xlcwZLc2lnbmVkX2J5BoN0cmFuc2FjdGlvbmFsX2lkA0NyZXF1aXJlZGFNM215X3JlZiN0eXBlECt3aGVyZQ8zYWxsX29mDruIcmVmLmlkPT01VFZhaGdPR2ZNYmM4Q2N5cjNOTjBQdmp3dElrRVo0Y1p3d2hOV0pXUkduMFQ4by9EZFdJWk1XYitCTGowYzErUnNNQVQyR0h5T2V4Z3BQeW5xQ29YcjNDVWRGN29KM2taQ1ViRHkxcWRQalJLTDNQQVlDSXBIbDJXMS85d29iaI1LUmVmZXJlbmNlK3N0YXRlX70ieQ4FCX6FU2V4cGlyZXNfYXR5DhluAYa9Hx9NvR+9Hj2NvSBTY3JlYXRlZF9ieR9NO2NyZWF0b3K9Hj2NvSC9IwdDcmV2aXNpb24IvSwHM3BhcmVudAUzb3JpZ2luBUticmFuY2hfaWQFvScGa3RyYW5zYWN0aW9uYWwFjYNVbml2ZXJzYUNvbnRyYWN0G25ldwZDcmV2b2tpbmcGU3NpZ25hdHVyZXMOxKcCFyNleHRzxJYBJxtrZXm8IQdHQOliH+L7esV/UjQzx7Xz1jcwS9btjsEgmTw/ZRAp+TNzaGE1MTK8QOuQS3uzY+HAnTO/AXSDaLv1jtR5RofGgSziAAHJFACuZQtA9uK3e9khUsYWvBjUlhIbm+qhz5d9H1vmaQsDPGtTY3JlYXRlZF9hdHkOBQl+hTtwdWJfa2V5xAkBHggcAQABxAABxTjxLDNEdH4texOqA6DO6XA0L+Z7wk7H+Q+cvskpw5Hgqnwqa2Q/4GZKDJP9RdaDv3C3MK5FsLjyfns0D+AhUnB6+Mn+BfREgwhqmqXSaOGlLKyvrg5hQ5nU7hE83fkm5iLdW2cVb9AgWR1Hx7rxAXcXsOHEnjv9DBeL2ND3qrC88f4b+oJ96ufvvdEpZSNoCLy2BjUw1LcXHe5+dflZfGSHtYlYOMLaTGCyU4UYVAAYcPltnA+P+bHzNdgmTuMTYrRmRZlWvVhHtBFbOihjnznhYN113MeYCC1oMP0h/FEojgwAxR/z3JBAgY5Eqa/Tve8NpGXgh5EPu6o0UEXPQyNzaWduxAABMso7K1/Sd9dmRbprHc+afaHl4kPj8b92YGdkPyMP/f11EVvvWZ9SgMuviIl1kK2leI882SRv+ssdPG87ftwVa+rQwDqTbNws88f7LAcoqTXHBko+32tcISO2n2YA6PSBRUCJBjCW4zro568UKatYL7IZUXobM5GedazSitelyshdR5MxZLkanVbQoo/EPrAgGnZXdM7ie8LfhZE1zcpxOI5Da7ohPSbfS1g2shpiy+lpFngDRfSb6qqJKpgeaWp9P/K/bBfsJIM3LSwzXyPY1/ZkF7Sry1P7vmfiUlz8UwbgyilZ1U0ipC4lwtFp+tvTU1IxmHxov5lj6qEPmFSQYyN0eXBlU3VuaWNhcHN1bGU7dmVyc2lvbiBDc3ViSXRlbXMGe3JlZmVyZW5jZWRJdGVtcwYjdGFncwczX190eXBle1RyYW5zYWN0aW9uUGFjaw==");
+    saveTP('/contracts/result/failed_cost.unicon', tpack);
   });
 
-  it.only('should register contract with references', async() => {
+  it.skip('should register contract with reference to approved contract', async() => {
+    const uKey = await openKey('/contracts/keys/ukey.private.unikey'); // PrivateKey
+    const uPack = openTP(`/contracts/payment/upack.1.unicon`); // TransactionPack
+
+    const keyA = await openKey('/contracts/keys/keyA2048.private.unikey'); // PrivateKey
+    const approvedContract = openTP(`/contracts/result/contractA.unicon`); // TransactionPack
+    const approvedContractId = await approvedContract.contract.hashId(); // HashId
+
+    const network = new Network(uKey);
+
+    try { await network.connect(); }
+    catch (err) { console.log("network connection error: ", err); }
+
+    const contractA = await createContract({ myData: "A" }, keyA); // TransactionPack
+
+    // const contractB = await createContract({ myData: "B" }, keyA);
+    // const contractBBin = await contractB.pack();
+    // const contractBId = await contractB.hashId();
+
+    contractA.createTransactional("someTransactionalId");
+    const where = { all_of: [ `ref.id=="${approvedContractId.base64}"` ] };
+    const ref = new Reference('my_ref', Reference.TYPE_TRANSACTIONAL, where);
+    // const ref = new Reference('my_ref', Reference.TYPE_EXISTING_DEFINITION, where);
+    // const ref = new Reference('my_ref', Reference.TYPE_EXISTING_STATE, where);
+    contractA.addReference(ref);
+    contractA.packData();
+    await contractA.sign(keyA);
+    const contractABin = contractA.pack();
+
+    const tpack = new TransactionPack(contractABin);
+    await tpack.addReferencedItem(approvedContract.contract.binary as Uint8Array);
+    const costs = await Network.getCost(tpack);
+    const payment = await Parcel.createPayment(costs.costInTu, uPack, {
+      isTestnet: true,
+      createdAt: network.now()
+    });
+    await payment.sign(uKey);
+    const tpackBIN = await tpack.pack();
+    const paymentBin = await payment.pack();
+    // SAVE DRAFT CONTRACT BEFORE REGISTRATION
+    saveTP('/contracts/result/tpack.unicon', tpackBIN);
+    // SAVE DRAFT PAYMENT BEFORE REGISTRATION
+    saveTP(`/contracts/payment/upack.temp.unicon`, paymentBin);
+    const parcel = await Parcel.create(paymentBin, tpackBIN);
+    const response = await network.registerParcel(parcel);
+    console.log(
+      response.payment.state,
+      response.payment.errors,
+      response.payload.state,
+      response.payload.errors
+    );
+
+    if (response.payment.state === 'APPROVED')
+      saveTP(`/contracts/payment/upack.1.unicon`, paymentBin);
+    if (response.packedItem)
+      saveTP('/contracts/result/parcel.unicon', response.packedItem as Uint8Array);
+
+    async function createContract(data: any, key: PrivateKey) {
+      const issuer = new RoleSimple('issuer', {
+        addresses: [key.publicKey.shortAddress]
+      });
+
+      return Contract.create(issuer, {
+        definitionData: data,
+        expiresAt: '3m',
+        createdAt: network.now()
+      });
+    }
+  });
+
+  it.skip('should register contract with reference (uniclient approved)', async() => {
+    const uKey = await openKey('/contracts/keys/ukey.private.unikey');
+    const keyA = await openKey('/contracts/keys/keyA2048.private.unikey');
+    const uPack = openTP(`/contracts/payment/upack.${1}.unicon`);
+    const conAOld = openTP(`/contracts/result/contractA.unicon`);
+
+    const network = new Network(uKey);
+
+    try { await network.connect(); }
+    catch (err) { console.log("network connection error: ", err); }
+
+    const contractB = await createContract({ mark: "B" }, keyA);
+    const contractA = await createContract({ mark: "A" }, keyA);
+
+    const contractBBin = await contractB.pack();
+    const contractBId = await contractB.hashId();
+    const conAOldId = await conAOld.contract.hashId();
+
+    const where = { all_of: [ `ref.id=="${conAOldId.base64}"` ] };
+    const ref = new Reference('my_ref', Reference.TYPE_EXISTING_DEFINITION, where);
+
+    contractA.addReference(ref);
+    contractA.packData();
+    await contractA.sign(keyA);
+    const contractABin = contractA.pack();
+    const tpack = new TransactionPack(contractABin);
+    await tpack.addReferencedItem(conAOld.contract.binary as Uint8Array);
+    const costs = await Network.getCost(tpack);
+    const payment = await Parcel.createPayment(costs.costInTu, uPack, {
+      isTestnet: true,
+      createdAt: network.now()
+    });
+    await payment.sign(uKey);
+    const tpackBIN = await tpack.pack();
+    const paymentBin = await payment.pack();
+    // SAVE DRAFT CONTRACT BEFORE REGISTRATION
+    saveTP('/contracts/result/tpack.unicon', tpackBIN);
+    // SAVE DRAFT PAYMENT BEFORE REGISTRATION
+    saveTP(`/contracts/payment/upack.temp.unicon`, paymentBin);
+    const parcel = await Parcel.create(paymentBin, tpackBIN);
+    const response = await network.registerParcel(parcel);
+    console.log(response.payment.state, response.payment.errors, response.payload.state, response.payload.errors);
+
+    if (response.payment.state === 'APPROVED')
+      saveTP(`/contracts/payment/upack.1.unicon`, paymentBin);
+    if (response.packedItem)
+      saveTP('/contracts/result/parcel.unicon', response.packedItem as Uint8Array);
+
+    async function createContract(data: any, key: PrivateKey) {
+      const issuer = new RoleSimple('issuer', {
+        addresses: [key.publicKey.shortAddress]
+      });
+
+      return Contract.create(issuer, {
+        definitionData: data,
+        expiresAt: '3m',
+        createdAt: network.now()
+      });
+    }
+  });
+
+  it.skip('should register contract with references', async() => {
     const uKey = await openKey('/contracts/keys/ukey.private.unikey');
     const keyA = await openKey('/contracts/keys/keyA2048.private.unikey');
     const keyB = await openKey('/contracts/keys/keyB2048.private.unikey');
@@ -195,21 +329,32 @@ describe('Contract', () => {
 
     const contractBBin = await contractB.pack();
     const contractBId = await contractB.hashId();
-    contractA.capsule.new.push(contractBId);
+    // contractA.capsule.new.push(contractBId);
 
     const conAOldId = await conAOld.contract.hashId();
     // console.log(conAOldId, conAOldId.base64);
-    const failedId = new HashId(decode64("5TVahgOGfMbc8Ccyr3NN0PvjwtIkEZ4cZwwhNWJWRGn0T8o/DdWIZMWb+BLj0c1+RsMAT2GHyOexgpPynqCoXr3CUdF7oJ3kZCUbDy1qdPjRKL3PAYCIpHl2W1/9wobh"));
-    const okId = new HashId(decode64("Skdg4+nPiHFRc7cfwbiatjXPrdKaJHLhvYUAa9QpkBW376Czwujog8vcQVEYyYh9VdnjcpY6mg9lQAYCmMs0tfkoZJGrccuvJG07ZLL3MTuw8sOraONZKCOe32vrjNrP"));
+    // const failedId = new HashId(decode64("5TVahgOGfMbc8Ccyr3NN0PvjwtIkEZ4cZwwhNWJWRGn0T8o/DdWIZMWb+BLj0c1+RsMAT2GHyOexgpPynqCoXr3CUdF7oJ3kZCUbDy1qdPjRKL3PAYCIpHl2W1/9wobh"));
+    // const okId = new HashId(decode64("Skdg4+nPiHFRc7cfwbiatjXPrdKaJHLhvYUAa9QpkBW376Czwujog8vcQVEYyYh9VdnjcpY6mg9lQAYCmMs0tfkoZJGrccuvJG07ZLL3MTuw8sOraONZKCOe32vrjNrP"));
     // console.log(contractBId, contractBId.base64);
 
     // This causes error
     // contractA.definition.data['id'] = okId;
     // This works
-    contractA.definition.data['id'] = contractBId;
 
-    // const where = { all_of: [ 'ref.id==this.definition.data.contractAId' ] };
-    // const ref = new Reference('my_ref', Reference.TYPE_EXISTING_DEFINITION, where);
+
+    // contractA.definition.data['my_id'] = contractBId.base64;
+
+    // ok
+    // contractA.definition.data['my_id'] = 'abcabcabcabcabcabcabcabcab';
+    // failed
+    contractA.definition.data['my_id'] = 'abcabcabcabcabcabcabcabcabc';
+    // contractA.definition.data['my_id'] = 'asdlfj;lkhaskdhldfggdfgsdj';
+
+
+
+    // const where = { all_of: [ `ref.id==this.definition.data.my_id` ] };
+    const where = { all_of: [ `ref.id=="${conAOldId.base64}"` ] };
+    const ref = new Reference('my_ref', Reference.TYPE_EXISTING_DEFINITION, where);
     // const ref = new Reference('my_ref', Reference.TYPE_TRANSACTIONAL, where);
     // contractA.createTransactional('');
     // contractA.addReference(ref);
@@ -228,11 +373,11 @@ describe('Contract', () => {
     // saveTP('/contracts/result/contractB.unicon', packBBin);
 
     const tpack = new TransactionPack(contractABin);
-    await tpack.addSubItem(contractBBin);
+    // await tpack.addSubItem(contractBBin);
     // await tpack.addReferencedItem(conAOld.contract.binary as Uint8Array);
 
     const costs = await Network.getCost(tpack);
-    console.log(costs);
+    console.log("==================================================================", costs);
 
     const payment = await Parcel.createPayment(costs.costInTu, uPack, {
       isTestnet: true,
@@ -252,7 +397,7 @@ describe('Contract', () => {
     // console.log("sleep 5 sec");
     // await sleep(5000);
     const response = await network.registerParcel(parcel);
-    console.log(response.payment.state, response.payload.state, response.payload.errors);
+    console.log(response.payment.state, response.payment.errors, response.payload.state, response.payload.errors);
 
     if (response.payment.state === 'APPROVED')
       saveTP(`/contracts/payment/upack.1.unicon`, paymentBin);

@@ -182,7 +182,7 @@ export class UniversaContract implements BossSerializable {
       state: stateSerialized
     };
 
-    if (this.transactional || this.transactional !== null)
+    if (this.transactional || this.transactional === null)
       serialized.transactional = this.transactional;
 
     return serialized;

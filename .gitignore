@@ -7,3 +7,4 @@ vendor/*
 .DS_Store
 .nyc_output
 package-lock.json
+src/test/contracts

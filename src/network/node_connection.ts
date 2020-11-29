@@ -1,7 +1,7 @@
 import request from 'xhr-request';
 import { abortable } from '../utils';
 import { Node } from './node';
-import { PrivateKey, PrivateKeySignOpts } from 'unicrypto';
+import { PrivateKey, PublicKey, PrivateKeySignOpts } from 'unicrypto';
 
 import {
   Boss,
@@ -12,6 +12,7 @@ import {
 } from 'unicrypto';
 
 const CONNECTION_TIMEOUT = 1000;
+const CLIENT_VERSION = 3;
 
 export default class NodeConnection {
   node: Node;
@@ -19,6 +20,8 @@ export default class NodeConnection {
   nodeURL: string;
   sessionId: number | undefined;
   sessionKey: SymmetricKey | undefined;
+  version: number | undefined;
+  nodePublicKey: PublicKey | undefined;
 
   constructor(node: Node, authKey: PrivateKey, directConnection?: boolean) {
     this.node = node;
@@ -35,17 +38,21 @@ export default class NodeConnection {
     console.log(`setting up protected connection to ${this.nodeURL}`);
 
     const clientKey = await this.authKey.publicKey.pack();
-
     const connectionData = await this.request("connect", {
       client_key: clientKey,
-      jsapi: true
+      client_version: CLIENT_VERSION
     }, { timeout: CONNECTION_TIMEOUT });
 
     this.sessionId = connectionData['session_id'];
+    const serverVersion = connectionData['server_version'] || 1;
+
+    this.version = Math.min(serverVersion, CLIENT_VERSION);
 
     const authData = Boss.dump({
       client_nonce: clientNonce,
-      server_nonce: connectionData['server_nonce']
+      server_nonce: connectionData['server_nonce'],
+      client_version: CLIENT_VERSION,
+      server_version: serverVersion
     });
 
     const token = await this.request("get_token", {
@@ -71,7 +78,6 @@ export default class NodeConnection {
       throw new Error("nonce mismatch, authentication failed");
 
     const decryptedTokenBin = await this.authKey.decrypt(params['encrypted_token']);
-
     const decryptedToken = Boss.load(decryptedTokenBin);
 
     this.sessionKey = new SymmetricKey({ keyBytes: decryptedToken.sk });
@@ -87,20 +93,29 @@ export default class NodeConnection {
   }
 
   async command(name: string, params: any = {}, requestOptions: any = {}) {
-    if (!this.sessionKey) throw new Error("not in session");
+    if (!this.sessionKey || !this.version) throw new Error("not in session");
 
+    const version = this.version;
     const sk = this.sessionKey;
     const data = Boss.dump({ command: name, params });
+    let encryptedParams: Uint8Array;
+
+    if (version >= 2) encryptedParams = await sk.etaEncrypt(data);
+    else encryptedParams = await sk.encrypt(data);
 
     const req = this.request("command", {
       command: "command",
-      params: await sk.encrypt(data),
+      params: encryptedParams,
       session_id: this.sessionId
     }, requestOptions);
 
     return abortable(new Promise((resolve, reject) => {
       req.then(async (response: any) => {
-        const decrypted = await sk.decrypt(response.result);
+        let decrypted: Uint8Array;
+
+        if (version >= 2) decrypted = await sk.etaDecrypt(response.result);
+        else decrypted = await sk.decrypt(response.result);
+
         const result = Boss.load(decrypted);
         if (result.error) reject(result.error);
         else resolve(result.result);
