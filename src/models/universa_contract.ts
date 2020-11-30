@@ -126,7 +126,9 @@ export class UniversaContract implements BossSerializable {
 
   get issuer() { return this.definition.issuer; }
   get owner() { return this.state.owner; }
+  set owner(role: Role) { this.state.owner = role; }
   get creator() { return this.state.creator; }
+  set creator(role: Role) { this.state.creator = role; }
 
   get parent() { return this.state.parent; }
   get origin() { return this.state.origin; }

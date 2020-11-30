@@ -44,7 +44,13 @@ export default class Contract {
 
   get issuer() { return this.capsule.issuer; }
   get owner() { return this.capsule.owner; }
+  set owner(role: Role) { this.capsule.owner = role; }
   get creator() { return this.capsule.creator; }
+  set creator(role: Role) { this.capsule.creator = role; }
+
+  setCreatorTo(roleName: string) {
+    this.capsule.contract.setCreatorTo(roleName);
+  }
 
   get parent() { return this.capsule.parent; }
   get origin() { return this.capsule.origin; }

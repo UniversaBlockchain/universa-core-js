@@ -11,6 +11,7 @@ import {
   RoleSimple,
   ChangeOwnerPermission,
   SplitJoinPermission,
+  ModifyDataPermission,
   KeyAddress,
   Boss,
   PublicKey,
@@ -249,6 +250,190 @@ describe('Contract', () => {
         expiresAt: '3m',
         createdAt: network.now()
       });
+    }
+  });
+
+  it.skip('should register emission compound', async() => {
+    const uKey = await openKey('/contracts/keys/ukey.private.unikey');
+    // const uPack = openTP(`/contracts/payment/upack.unicon`);
+    const serviceKey = await openKey('/contracts/keys/keyA2048.private.unikey');
+    const customerKey = await openKey('/contracts/keys/keyB2048.private.unikey');
+
+    const network = new Network(uKey);
+    try { await network.connect(); }
+    catch (err) { console.log("network connection error: ", err); }
+
+    const token = await createToken(customerKey, serviceKey); // Contract
+    const tokenBin = token.pack();
+    const tokenId = await token.hashId();
+
+    const issueAgreement = await createIssueAgreement(
+      customerKey, serviceKey, tokenId
+    );
+    const issueAgreementBin = issueAgreement.pack();
+    const issueAgreementId = await issueAgreement.hashId();
+
+    const managementAgreement = await createManagementAgreement(
+      customerKey, serviceKey, issueAgreementId
+    );
+    const managmentBin = managementAgreement.pack();
+
+    const compound = new TransactionPack(managmentBin, {
+      subItems: [issueAgreementBin, tokenBin]
+    });
+
+    await compound.sign(customerKey);
+    await compound.sign(serviceKey);
+
+    const result = await register(compound);
+
+    console.log("basic registration", result);
+
+    if (result.state !== 'APPROVED') return;
+
+    const newRevision = await managementAgreement.createRevision(network.now());
+    newRevision.state.data = { some: "values" };
+    newRevision.setCreatorTo('owner');
+    await newRevision.sign(customerKey);
+    await newRevision.sign(serviceKey);
+
+    const newRevisionPacked = newRevision.pack();
+    const compound2 = new TransactionPack(newRevisionPacked);
+
+    const result2 = await register(compound2);
+    console.log(result2);
+
+
+    async function register(pack: TransactionPack) {
+      const uPack = openTP(`/contracts/payment/upack.unicon`);
+      const costs = await Network.getCost(pack);
+
+      const payment = await Parcel.createPayment(costs.costInTu, uPack, {
+        isTestnet: true,
+        createdAt: network.now()
+      });
+      await payment.sign(uKey);
+      const paymentBin = await payment.pack();
+      const packBIN = await pack.pack();
+
+      // SAVE DRAFT CONTRACT BEFORE REGISTRATION
+      saveTP('/contracts/result/compound.unicon', packBIN);
+      // SAVE DRAFT PAYMENT BEFORE REGISTRATION
+      saveTP(`/contracts/payment/upack.temp.unicon`, paymentBin);
+
+      const parcel = await Parcel.create(paymentBin, packBIN);
+      const response = await network.registerParcel(parcel);
+
+      if (response.payment.state === 'APPROVED')
+        saveTP(`/contracts/payment/upack.unicon`, paymentBin);
+      else console.log("payment is", response.payment.state, response.payment.errors);
+
+      return response.payload;
+    }
+
+    async function createManagementAgreement(
+      customerKey: PrivateKey,
+      serviceKey: PrivateKey,
+      issueAgreementId: HashId
+    ) {
+      const issuer = new RoleSimple('issuer', {
+        addresses: [serviceKey.publicKey.shortAddress]
+      });
+
+      const contract = Contract.create(issuer, {
+        owner: new RoleSimple('owner', {
+          addresses: [
+            customerKey.publicKey.shortAddress,
+            serviceKey.publicKey.shortAddress,
+          ]
+        }),
+        permissions: [
+          ModifyDataPermission.create('owner', { fields: { 'data': [] }})
+        ],
+        expiresAt: '3m',
+        createdAt: network.now()
+      });
+
+      const where = { all_of: [ `ref.id=="${issueAgreementId.base64}"` ] };
+      const reference = new Reference(
+        'issue_agreement_reference', Reference.TYPE_EXISTING_DEFINITION, where
+      );
+
+      contract.addReference(reference);
+
+      return contract;
+    }
+
+    async function createIssueAgreement(
+      customerKey: PrivateKey,
+      serviceKey: PrivateKey,
+      tokenId: HashId
+    ) {
+      const issuer = new RoleSimple('issuer', {
+        addresses: [serviceKey.publicKey.shortAddress]
+      });
+
+      const contract = Contract.create(issuer, {
+        owner: new RoleSimple('owner', {
+          addresses: [
+            customerKey.publicKey.shortAddress,
+            serviceKey.publicKey.shortAddress,
+          ]
+        }),
+        expiresAt: '3m',
+        createdAt: network.now()
+      });
+
+      const where = { all_of: [ `ref.id=="${tokenId.base64}"` ] };
+      const reference = new Reference('token_reference', Reference.TYPE_EXISTING_DEFINITION, where);
+
+      contract.addReference(reference);
+
+      return contract;
+    }
+
+    async function createToken(
+      customerKey: PrivateKey,
+      serviceKey: PrivateKey
+    ) {
+      const issuer = new RoleSimple('issuer', {
+        addresses: [customerKey.publicKey.shortAddress]
+      });
+
+      const splitJoinPermission = SplitJoinPermission.create('owner', {
+        'field_name': 'amount',
+        'min_value': '0.0',
+        'min_unit': '10.0',
+        'join_match_fields': ['state.origin']
+      });
+
+      const contract = Contract.create(issuer, {
+        owner: new RoleSimple('owner', {
+          addresses: [serviceKey.publicKey.shortAddress]
+        }),
+        definitionData: {
+          'template_name': 'UNIT_CONTRACT',
+          'unit_name': 'My First Token',
+          'unit_short_name': 'MFT',
+          'description': 'This is my first token contract'
+        },
+        stateData: {
+          'amount': '100'
+        },
+        permissions: [
+          ChangeOwnerPermission.create('owner'),
+          splitJoinPermission
+        ],
+        expiresAt: '3m',
+        createdAt: network.now()
+      });
+
+      // You can also use setter for owner
+      // contract.owner = new RoleSimple('owner', {
+      //   addresses: [serviceKey.publicKey.shortAddress]
+      // });
+
+      return contract;
     }
   });
 

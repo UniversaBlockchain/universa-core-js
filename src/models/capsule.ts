@@ -14,7 +14,8 @@ export interface CreateCapsuleOptions {
   stateData?: any,
   createdAt?: Date,
   expiresAt?: Date | string,
-  permissions?: Array<Permission>
+  permissions?: Array<Permission>,
+  owner?: Role
 }
 
 export default class Capsule {
@@ -51,12 +52,16 @@ export default class Capsule {
     if (opts.permissions)
       opts.permissions.forEach(p => contract.addPermission(p));
 
+    if (opts.owner) contract.owner = opts.owner;
+
     return new Capsule(contract);
   }
 
   get issuer() { return this.contract.issuer; }
   get owner() { return this.contract.owner; }
+  set owner(role: Role) { this.contract.owner = role; }
   get creator() { return this.contract.creator; }
+  set creator(role: Role) { this.contract.creator = role; }
 
   get parent() { return this.contract.parent; }
   get origin() { return this.contract.origin; }
