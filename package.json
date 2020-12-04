@@ -1,6 +1,6 @@
 {
   "name": "universa-core",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "Tools to perform basic operations with Universa networks and contracts",
   "main": "src/index.ts",
   "scripts": {
@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "big.js": "^6.0.2",
-    "unicrypto": "^1.1.8",
+    "unicrypto": "^1.1.9",
     "xhr-request": "^1.1.0"
   },
   "devDependencies": {
