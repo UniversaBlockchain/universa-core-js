@@ -1,4 +1,3 @@
-import request from 'xhr-request';
 import { Node } from './node';
 import Topology from './topology';
 import { retry, abortable, readJSON, Cancelable } from '../utils';
@@ -25,7 +24,7 @@ function createHashId(id: Uint8Array) {
   };
 }
 
-function sleep(ms) {
+function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
@@ -43,8 +42,24 @@ interface ContractState {
 }
 
 interface ParcelState {
-  payment: any,
-  payload: any
+  payment: ItemResult,
+  payload: ItemResult
+}
+
+interface ItemResult {
+  createdAt: Date | null,
+  extra: any,
+  __type: string,
+  isTestnet: boolean,
+  state: string,
+  haveCopy: boolean,
+  lockedById: any,
+  expiresAt: Date | null,
+  errors: any
+}
+
+interface ItemResultResponse {
+  itemResult: ItemResult
 }
 
 type ConnectionDict = { [id: string]: NodeConnection };
@@ -163,7 +178,7 @@ export default class Network {
     return abortable(retry(run, {
       attempts: 5,
       interval: 1000,
-      onError: (e) => console.log(e, ` send command again`)
+      onError: (e: Error) => console.log(e, ` send command again`)
     }), req);
   }
 
@@ -214,7 +229,7 @@ export default class Network {
 
       let positive = 0;
       let negative = 0;
-      let states = {};
+      let states: { [st: string]: number } = {};
       let isTestnet: boolean;
 
       const requests: Array<Cancelable<any>> = [];
@@ -315,7 +330,7 @@ export default class Network {
   async loadNetworkTime() {
     const url = 'https://xchange.mainnetwork.io/api/v1/utc';
     const response = await NodeConnection.xchangeRequest('GET', url);
-    const uTime = (JSON.parse(response)).currentEpochSecond * 1000;
+    const uTime = response.currentEpochSecond * 1000;
     const localTime = Date.now();
 
     this.timeOffset = uTime - localTime;
@@ -330,7 +345,7 @@ export default class Network {
     return NodeConnection.xchangeRequest('POST', url, { data });
   }
 
-  async registerParcel(parcel: Parcel) {
+  async registerParcel(parcel: Parcel): Promise<ParcelState> {
     const self = this;
 
     const packedItem = Boss.dump(parcel);
@@ -363,8 +378,8 @@ export default class Network {
       payload: payloadState
     };
 
-    async function finalState(id: HashId) {
-      async function check(response) {
+    async function finalState(id: HashId): Promise<ItemResult> {
+      async function check(response: ItemResultResponse) {
         const { itemResult } = response;
         const { state } = itemResult;
 

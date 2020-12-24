@@ -30,7 +30,7 @@ export default class TransactionPack implements BossSerializable {
     const opts = options || {};
     const subItemsPacked = opts.subItems || [];
     const referencedItemsPacked = opts.referencedItems || [];
-    const tags = opts.tags || {};
+    const tags: { [tag: string]: HashId } = opts.tags || {};
 
     this.contract = Contract.unpack(contractPacked);
 
@@ -51,7 +51,7 @@ export default class TransactionPack implements BossSerializable {
 
       const tagLoaders: Promise<void>[] = [];
 
-      async function loadTag(tag) {
+      async function loadTag(tag: string) {
         const hashId = tags[tag];
         const hashId64 = hashId.base64;
 
@@ -131,7 +131,7 @@ export default class TransactionPack implements BossSerializable {
   serializeToBOSS() {
     const subItems: Uint8Array[] = [];
     const referencedItems: Uint8Array[] = [];
-    const tags = {};
+    const tags: { [tag: string]: HashId } = {};
 
     for (let hashId64 in this.subItems) {
       subItems.push(this.subItems[hashId64].binary as Uint8Array);

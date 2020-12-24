@@ -1,7 +1,6 @@
-import request from 'xhr-request';
 import { abortable } from '../utils';
 import { Node } from './node';
-import { PrivateKey, PublicKey, PrivateKeySignOpts } from 'unicrypto';
+import { PrivateKey, PublicKey, PrivateKeySignOpts, textToBytes } from 'unicrypto';
 
 import {
   Boss,
@@ -11,7 +10,16 @@ import {
   SymmetricKey
 } from 'unicrypto';
 
-const CONNECTION_TIMEOUT = 1000;
+const isNode = Object.prototype.toString.call(typeof process !== 'undefined' ? process : 0) === '[object process]';
+const portableFetch = isNode ? require('node-fetch') : window.fetch;
+
+interface FetchOpts {
+  method: string,
+  headers: any,
+  body?: string
+}
+
+const CONNECTION_TIMEOUT = 5000;
 const CLIENT_VERSION = 3;
 
 export default class NodeConnection {
@@ -134,28 +142,36 @@ export default class NodeConnection {
     var req;
 
     const promise = new Promise((resolve, reject) => {
-      function onResponse(err: Error, data: any) {
-        if (err) return reject(err);
+      let headers = options.headers || {};
+      if (method === 'POST') headers = Object.assign({}, headers, {
+        'Content-Type': 'application/json'
+      });
 
-        const answer = Boss.load(new Uint8Array(data));
-
-        if (answer && answer.result === "ok") resolve(answer.response);
-        else reject(answer);
-      }
-
-      const opts: any = {
+      let opts: FetchOpts = {
         method,
-        responseType: 'arraybuffer',
-        headers: options.headers || {},
-        timeout: options.timeout || 0
+        headers,
       };
 
-      if (method !== "GET" && options.data) {
-        opts.json = true;
-        opts.body = options.data;
-      }
+      if (method === 'POST') opts.body = JSON.stringify(options.data);
 
-      req = request(url, opts, onResponse);
+      portableFetch(url, opts).then((res: any) => {
+          return res.blob();
+        })
+        .then(function (blob: Blob) {
+          return blob.arrayBuffer();
+        }).then(function (ab: ArrayBuffer) {
+          const response = new Uint8Array(ab);
+          const answer = Boss.load(response);
+
+          if (answer && answer.result === "ok") resolve(answer.response);
+          else reject(answer);
+
+        }).catch((err: Error) => reject(err));
+
+      if (options.timeout) {
+        const e = new Error("Connection timed out");
+        setTimeout(reject, options.timeout, e);
+      }
     });
 
     return abortable(promise, req);
@@ -165,22 +181,22 @@ export default class NodeConnection {
     var req;
 
     const promise = new Promise((resolve, reject) => {
-      function onResponse(err: Error, data: any) {
-        if (err) return reject(err);
-        resolve(data);
-      }
+      let headers = options.headers || {};
+      if (method === 'POST') headers = Object.assign({}, headers, {
+        'Content-Type': 'application/json'
+      });
 
-      const opts: any = {
+      let opts: FetchOpts = {
         method,
-        headers: { 'Content-Type': 'application/json; charset=utf-8' }
+        headers,
       };
 
-      if (method !== "GET" && options.data) {
-        opts.json = true;
-        opts.body = options.data;
-      }
+      if (method === 'POST') opts.body = JSON.stringify(options.data);
 
-      req = request(url, opts, onResponse);
+      portableFetch(url, opts).then((res: any) => {
+        return res.json();
+      })
+      .then(resolve).catch((err: Error) => reject(err));
     });
 
     return abortable(promise, req);

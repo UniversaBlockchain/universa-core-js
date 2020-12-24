@@ -237,8 +237,6 @@ describe('Contract', () => {
 
     if (response.payment.state === 'APPROVED')
       saveTP(`/contracts/payment/upack.1.unicon`, paymentBin);
-    if (response.packedItem)
-      saveTP('/contracts/result/parcel.unicon', response.packedItem as Uint8Array);
 
     async function createContract(data: any, key: PrivateKey) {
       const issuer = new RoleSimple('issuer', {
@@ -482,8 +480,6 @@ describe('Contract', () => {
 
     if (response.payment.state === 'APPROVED')
       saveTP(`/contracts/payment/upack.1.unicon`, paymentBin);
-    if (response.packedItem)
-      saveTP('/contracts/result/parcel.unicon', response.packedItem as Uint8Array);
 
     async function createContract(data: any, key: PrivateKey) {
       const issuer = new RoleSimple('issuer', {
@@ -586,9 +582,6 @@ describe('Contract', () => {
 
     if (response.payment.state === 'APPROVED')
       saveTP(`/contracts/payment/upack.1.unicon`, paymentBin);
-
-    if (response.packedItem)
-      saveTP('/contracts/result/failed_parcel.unicon', response.packedItem as Uint8Array);
 
     async function createContract(data: any, key: PrivateKey) {
       const issuer = new RoleSimple('issuer', {

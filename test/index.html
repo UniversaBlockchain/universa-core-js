@@ -5,10 +5,33 @@
     <title>Mocha</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="mocha.css">
-    <script src="../dist/toolkit.js"></script>
+    <script src="js/uni.min.js"></script>
+    <script>
+      const { PrivateKey, decode64, Network } = Uni;
+
+      const approvedId = decode64("dXFhEhoVw8G9QI1I4TnLJJxfgp2O+E+tddXY89u2/ZiFntd108MjIN1554GkSsS5kGVPW0nRjG/B2qI0JRm+Y6F7PPGB23vN3Tm55VnKung5OAijgsypuT/OL33lyUze");
+      const keyBin = decode64("HhisGAUQuCAAuPpkMr8wf6f/jCb2p1+5xDwCU25f/m3Q7dh3R31OUfD+WvAtDga1aifgufNudMwZREU6yiqADUIEBsELX6kFEHn0hd5zsniIoGchIhMWeaQ+F2EzB7wkK742QoY4mlbJpCsNzc8ehr/MsD19a8Im0YdJ4t1gudvQE7h+tRrImh+CLIN4FpHtvT0ZNroDKnNCnimOPbfe0jFip3cnC6bGdEvvpkLVJwWs1OQa6kkPBrdCMI3NrTlk21qxMu/ySukeRhCGsSp+KprNWinUWrVqfKmWkrKdLLePlyY+HB6sQkIBmZ7PbVd3nejRiTGeswOR+ZTHOvE4t5afVq+dfmWFsNlEGCQvKmwUqxPIw+kw5IcUdZrat0DvsJ2rDS6LwlnaNBLoEd7EgaPcI3lvjwuQ8XjCBQ05YrHwegTkLv6djqwfooS6ip4wCMmwPG1t294hP5BXcJ/i1uv2pkNdEQMacPbXjiPw0d5v0S02/VJv9oJ3NWLqtMhxgjFAhuKyzyz/0gqpQllW9zJrYQop3oNv1l6v0+FMo5ITfqB+NvuX5LjSYXimKLnj7BqwO4lVfOTaTehHaNGuBW4JqC5F3eRx1YWFmIM6VHlsXJ9KzmK9nSA1mDJe1v3GNq7bd8GDGsF89ROB2M44p8yN9tJnXIGn/pxB+7/2sB9suUcxgykkTePnnpIoo1AdoWppTG/qNtXDi0amhy3XwOg0kDQg60JNW4mo5did7Z6vkTPufi9yFcW+H3s9JB1IssbETopHDJ80Vl+xYAozLvEKxbectXw");
+      const keyPassword = "81bf60af-703c-4c28-8fc7-878860089df5";
+
+      async function main() {
+        const privateKey = await PrivateKey.unpack({ bin: keyBin, password: keyPassword });
+        const network = new Network(privateKey);
+        console.log("!!!", network.timeUpdatedAt);
+        await network.loadNetworkTime();
+        console.log("!!!", network.timeUpdatedAt);
+        await network.connect();
+        const response = await network.checkContract(approvedId);
+
+        console.log(response);
+      }
+
+      main();
+
+
+    </script>
   </head>
   <body>
-    <div id="mocha"></div>
+    <!-- <div id="mocha"></div>
     <script src="chai.js"></script>
     <script src="mocha.js"></script>
     <script>
@@ -17,6 +40,6 @@
     <script src="tests.spec.js"></script>
     <script>
       mocha.run();
-    </script>
+    </script> -->
   </body>
 </html>

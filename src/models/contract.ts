@@ -87,7 +87,7 @@ export default class Contract {
     const data = this.data;
     const self = this;
 
-    async function verify(index: number) {
+    async function verify(index: number): Promise<boolean> {
       if (index >= signaturesTotal) return false;
       const signature = self.signatures[index];
 

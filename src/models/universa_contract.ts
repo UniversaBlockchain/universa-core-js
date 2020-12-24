@@ -43,10 +43,10 @@ interface ContractCreateOptions {
 const DEFAULT_EXPIRES_AT = 5; // years
 const DEFAULT_API_LEVEL = 4;
 
-function uniqueShortId(existing: Array<string>) {
+function uniqueShortId(existing: Array<string>): string {
   const maxIterations = 100000;
   let found = false;
-  let id;
+  let id = '';
   let i = 0;
 
   while (i < maxIterations && !found) {
