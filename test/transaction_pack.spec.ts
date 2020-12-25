@@ -14,13 +14,13 @@ const pack2BIN = decode64("J0NzdWJJdGVtc6bEbhInI2RhdGHEUg4fG25ldwZDcmV2b2tpbmcdQ
 
 describe('Transaction pack', () => {
   it('should read transaction pack', async () => {
-    const tpack = Boss.load(pack1BIN) as TransactionPack;
+    const tpack = TransactionPack.unpack(pack1BIN);
 
     expect(tpack instanceof TransactionPack).to.equal(true);
   });
 
   it('should find parent of the main contract in transaction pack', async () => {
-    const tpack = Boss.load(pack1BIN) as TransactionPack;
+    const tpack = TransactionPack.unpack(pack1BIN);
     const originId = tpack.contract.origin;
     const parentId = tpack.contract.parent;
     let parent: Contract | undefined;

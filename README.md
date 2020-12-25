@@ -304,10 +304,10 @@ ref.transactionalId = 'some_id';
 ## Transaction Pack
 Load transaction pack from binary
 ```js
-import { TransactionPack, Boss } from 'universa-core';
+import { TransactionPack } from 'universa-core';
 
 const tpackBinary; // Uint8Array;
-const tpack = Boss.load(tpackBinary) as TransactionPack;
+const tpack = TransactionPack.unpack(tpackBinary);
 
 tpack.contract // main contract
 
@@ -316,48 +316,48 @@ const parent = await tpack.getItem(tpack.contract.parent);
 ```
 Sign transaction pack's main contract
 ```js
-import { TransactionPack, Boss } from 'universa-core';
+import { TransactionPack } from 'universa-core';
 
 const tpackBinary; // Uint8Array;
-const tpack = Boss.load(tpackBinary);
+const tpack = TransactionPack.unpack(tpackBinary);
 
 tpack.sign(privateKey); // some PrivateKey instance to sign
 ```
 Get tagged contract
 ```js
-import { TransactionPack, Boss } from 'universa-core';
+import { TransactionPack } from 'universa-core';
 
 const tpackBinary; // Uint8Array;
-const tpack = Boss.load(tpackBinary);
+const tpack = TransactionPack.unpack(tpackBinary);
 
 const contract = await tpack.getTag("sometag"); // Contract instance
 ```
 Add tag
 ```js
-import { TransactionPack, Boss } from 'universa-core';
+import { TransactionPack } from 'universa-core';
 
 const tpackBinary; // Uint8Array;
-const tpack = Boss.load(tpackBinary);
+const tpack = TransactionPack.unpack(tpackBinary);
 
 await tpack.addTag("mytag", hashId); // some HashId instance
 ```
 Add subItem
 ```js
-import { TransactionPack, Boss } from 'universa-core';
+import { TransactionPack } from 'universa-core';
 
 const tpackBinary; // Uint8Array;
 const contractBinary; // Uint8Array, packed Contract instance
-const tpack = Boss.load(tpackBinary); // TransactionPack instance
+const tpack = TransactionPack.unpack(tpackBinary); // TransactionPack instance
 
 await tpack.addSubItem(contractBinary); // some HashId instance
 ```
 Add referencedItem
 ```js
-import { TransactionPack, Boss } from 'universa-core';
+import { TransactionPack } from 'universa-core';
 
 const tpackBinary; // Uint8Array;
 const contractBinary; // Uint8Array, packed Contract instance
-const tpack = Boss.load(tpackBinary); // TransactionPack instance
+const tpack = TransactionPack.unpack(tpackBinary); // TransactionPack instance
 
 await tpack.addReferencedItem(contractBinary); // some HashId instance
 ```

@@ -126,6 +126,10 @@ export default class TransactionPack implements BossSerializable {
     return Boss.dump(this);
   }
 
+  static unpack(packed: Uint8Array): TransactionPack {
+    return Boss.load(packed) as TransactionPack;
+  }
+
   static className = "TransactionPack";
 
   serializeToBOSS() {

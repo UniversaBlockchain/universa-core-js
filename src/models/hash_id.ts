@@ -34,6 +34,14 @@ export default class HashId implements BossSerializable {
   static deserializeFromBOSS(serialized: HashIdSerialized): HashId {
     return new HashId(serialized.composite3)
   }
+
+  static unpack(bin: Uint8Array): HashId {
+    return Boss.load(bin) as HashId;
+  }
+
+  pack() {
+    return Boss.dump(this);
+  }
 }
 
 Boss.register("HashId", HashId);

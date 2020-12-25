@@ -51,6 +51,14 @@ export default class KeyRecord implements BossSerializable {
   static deserializeFromBOSS(serialized: any): KeyRecord {
     return new KeyRecord(serialized.key.packed, omitBOSS(serialized, ['key']));
   }
+
+  pack() {
+    return Boss.dump(this);
+  }
+
+  static unpack(bin: Uint8Array): KeyRecord {
+    return Boss.load(bin) as KeyRecord;
+  }
 }
 
 Boss.register("KeyRecord", KeyRecord);

@@ -89,6 +89,14 @@ export default class Parcel implements BossSerializable {
 
     return new TransactionPack(uNew.pack(), { subItems: [uOld.binary]});
   }
+
+  pack() {
+    return Boss.dump(this);
+  }
+
+  static unpack(bin: Uint8Array): Parcel {
+    return Boss.load(bin) as Parcel;
+  }
 }
 
 Boss.register("Parcel", Parcel);
