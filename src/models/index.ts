@@ -1,6 +1,7 @@
 export * from './universa_contract';
 import Capsule from './capsule';
 import Contract from './contract';
+import Compound from './compound';
 import TransactionPack from './transaction_pack';
 import Parcel from './parcel';
 import Reference from './reference';
@@ -21,6 +22,7 @@ import SplitJoinPermission from './permissions/split_join_permission';
 export {
   Capsule,
   Contract,
+  Compound,
   TransactionPack,
   Parcel,
   Reference,

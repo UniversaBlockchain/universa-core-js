@@ -614,6 +614,44 @@ const result = await network.registerParcel(parcel);
 console.log(result.payment, result.payload); // shows itemResult for each pack
 ```
 
+## Compound
+Read compound
+```js
+import Compound from 'universa-core';
+
+const compoundBIN; // packed compound Uint8Array
+const compound = Compound.unpack(compoundBIN);
+```
+
+Get tagged contract from compound
+```js
+import Compound from 'universa-core';
+
+const compoundBIN; // packed compound Uint8Array
+const compound = Compound.unpack(compoundBIN);
+const someContractTransactionPack = await compound.getTag('sometag'); // TransactionPack | null
+```
+
+Sign compound
+```js
+import Compound from 'universa-core';
+
+const compoundBIN; // packed compound Uint8Array
+const compound = Compound.unpack(compoundBIN);
+
+await compound.sign(privateKey); // privateKey: PrivateKey instance
+```
+
+Pack compound
+```js
+import Compound from 'universa-core';
+
+const compoundBIN; // packed compound Uint8Array
+const compound = Compound.unpack(compoundBIN);
+
+const packed = await compound.pack();
+```
+
 ## Full example for creating and register your own unit contract
 ```js
 const uPack; // U package TransactionPack instance, last revision
