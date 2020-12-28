@@ -1,4 +1,6 @@
-import { Boss, BossSerializable, PrivateKey } from 'unicrypto';
+import { BossSerializable, PrivateKey } from 'unicrypto';
+import BossSingleton from '../boss';
+const boss = BossSingleton.getInstance();
 import Contract from './contract';
 import HashId from './hash_id';
 
@@ -123,11 +125,11 @@ export default class TransactionPack implements BossSerializable {
   async pack() {
     await this.ready;
 
-    return Boss.dump(this);
+    return boss.dump(this);
   }
 
   static unpack(packed: Uint8Array): TransactionPack {
-    return Boss.load(packed) as TransactionPack;
+    return boss.load(packed) as TransactionPack;
   }
 
   static className = "TransactionPack";
@@ -172,4 +174,4 @@ export default class TransactionPack implements BossSerializable {
   }
 }
 
-Boss.register("TransactionPack", TransactionPack);
+boss.register("TransactionPack", TransactionPack);

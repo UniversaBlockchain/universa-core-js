@@ -1,4 +1,4 @@
-import { Boss, PrivateKey, decode64 } from 'unicrypto';
+import { PrivateKey, decode64 } from 'unicrypto';
 import TransactionPack from './transaction_pack';
 import HashId from './hash_id';
 

@@ -3,9 +3,10 @@ import NodeConnection from './node_connection';
 import {
   PublicKey,
   decode64,
-  encode64,
-  Boss
+  encode64
 } from 'unicrypto';
+import BossSingleton from '../boss';
+const boss = BossSingleton.getInstance();
 
 const forceHTTPS = (url: string) =>
   url.replace("http://", "https://").replace(":8080", ":443");
@@ -128,6 +129,6 @@ export class Node {
 
     if (!isVerified) throw new Error("node signature mismatch");
 
-    return Boss.load(packed);
+    return boss.load(packed);
   }
 }

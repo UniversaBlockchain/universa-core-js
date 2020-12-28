@@ -1,10 +1,11 @@
 import {
   KeyAddress,
   PublicKey,
-  BossSerializable,
-  BossDeserializable,
-  Boss
+  BossSerializable
 } from 'unicrypto';
+
+import BossSingleton from '../../boss';
+const boss = BossSingleton.getInstance();
 
 import { Role, AvailableForOptions, RoleDictionary } from './role';
 
@@ -60,4 +61,4 @@ export default class RoleLink implements Role, BossSerializable {
   }
 }
 
-Boss.register("RoleLink", RoleLink);
+boss.register("RoleLink", RoleLink);

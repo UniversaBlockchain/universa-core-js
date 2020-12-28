@@ -1,4 +1,6 @@
-import { Boss, BossSerializable, BossDeserializable } from 'unicrypto';
+import { BossSerializable } from 'unicrypto';
+import BossSingleton from '../../boss';
+const boss = BossSingleton.getInstance();
 import { Role, AvailableForOptions } from '../roles/role';
 import RoleLink from '../roles/role_link';
 import Permission from './permission';
@@ -43,4 +45,4 @@ export default class ChangeNumberPermission extends Permission implements BossSe
   }
 }
 
-Boss.register("ChangeNumberPermission", ChangeNumberPermission);
+boss.register("ChangeNumberPermission", ChangeNumberPermission);

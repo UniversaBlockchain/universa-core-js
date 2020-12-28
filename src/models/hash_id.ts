@@ -1,10 +1,10 @@
 import {
   encode64,
   hashId,
-  BossSerializable,
-  BossDeserializable,
-  Boss
+  BossSerializable
 } from 'unicrypto';
+import BossSingleton from '../boss';
+const boss = BossSingleton.getInstance();
 
 interface HashIdSerialized {
   composite3: Uint8Array
@@ -36,12 +36,12 @@ export default class HashId implements BossSerializable {
   }
 
   static unpack(bin: Uint8Array): HashId {
-    return Boss.load(bin) as HashId;
+    return boss.load(bin) as HashId;
   }
 
   pack() {
-    return Boss.dump(this);
+    return boss.dump(this);
   }
 }
 
-Boss.register("HashId", HashId);
+boss.register("HashId", HashId);

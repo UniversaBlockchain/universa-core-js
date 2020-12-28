@@ -3,12 +3,13 @@ import { Node } from './node';
 import { PrivateKey, PublicKey, PrivateKeySignOpts, textToBytes } from 'unicrypto';
 
 import {
-  Boss,
   randomBytes,
   encode64,
   SHA,
   SymmetricKey
 } from 'unicrypto';
+import BossSingleton from '../boss';
+const boss = BossSingleton.getInstance();
 
 const isNode = Object.prototype.toString.call(typeof process !== 'undefined' ? process : 0) === '[object process]';
 const portableFetch = isNode ? require('node-fetch') : window.fetch;
@@ -56,7 +57,7 @@ export default class NodeConnection {
 
     this.version = Math.min(serverVersion, CLIENT_VERSION);
 
-    const authData = Boss.dump({
+    const authData = boss.dump({
       client_nonce: clientNonce,
       server_nonce: connectionData['server_nonce'],
       client_version: CLIENT_VERSION,
@@ -80,13 +81,13 @@ export default class NodeConnection {
 
     if (!isVerified) throw new Error("bad node signature");
 
-    const params = Boss.load(tokenData);
+    const params = boss.load(tokenData);
 
     if (encode64(clientNonce) !== encode64(params['client_nonce']))
       throw new Error("nonce mismatch, authentication failed");
 
     const decryptedTokenBin = await this.authKey.decrypt(params['encrypted_token']);
-    const decryptedToken = Boss.load(decryptedTokenBin);
+    const decryptedToken = boss.load(decryptedTokenBin);
 
     this.sessionKey = new SymmetricKey({ keyBytes: decryptedToken.sk });
 
@@ -105,7 +106,7 @@ export default class NodeConnection {
 
     const version = this.version;
     const sk = this.sessionKey;
-    const data = Boss.dump({ command: name, params });
+    const data = boss.dump({ command: name, params });
     let encryptedParams: Uint8Array;
 
     if (version >= 2) encryptedParams = await sk.etaEncrypt(data);
@@ -124,7 +125,7 @@ export default class NodeConnection {
         if (version >= 2) decrypted = await sk.etaDecrypt(response.result);
         else decrypted = await sk.decrypt(response.result);
 
-        const result = Boss.load(decrypted);
+        const result = boss.load(decrypted);
         if (result.error) reject(result.error);
         else resolve(result.result);
       }).catch(reject);
@@ -133,7 +134,7 @@ export default class NodeConnection {
 
   request(path: string, params: any = {}, requestOptions: any = {}) {
     const url = `${this.nodeURL}/${path}`;
-    const data = { requestData64: encode64(Boss.dump(params)) };
+    const data = { requestData64: encode64(boss.dump(params)) };
 
     return NodeConnection.request("POST", url, { data, ...requestOptions });
   }
@@ -161,7 +162,7 @@ export default class NodeConnection {
           return blob.arrayBuffer();
         }).then(function (ab: ArrayBuffer) {
           const response = new Uint8Array(ab);
-          const answer = Boss.load(response);
+          const answer = boss.load(response);
 
           if (answer && answer.result === "ok") resolve(answer.response);
           else reject(answer);

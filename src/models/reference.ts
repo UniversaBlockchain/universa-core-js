@@ -1,4 +1,6 @@
-import { Boss, BossSerializable } from 'unicrypto';
+import { BossSerializable } from 'unicrypto';
+import BossSingleton from '../boss';
+const boss = BossSingleton.getInstance();
 import HashId from './hash_id';
 
 enum ReferenceType {
@@ -60,4 +62,4 @@ export default class Reference implements BossSerializable {
   }
 }
 
-Boss.register("Reference", Reference);
+boss.register("Reference", Reference);

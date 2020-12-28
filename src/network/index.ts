@@ -9,11 +9,12 @@ import HashId from '../models/hash_id';
 const mainnet = require('../../mainnet.json');
 
 import {
-  Boss,
   decode64,
   encode64,
   PrivateKey
 } from 'unicrypto';
+import BossSingleton from '../boss';
+const boss = BossSingleton.getInstance();
 
 const CHECK_CONTRACT_TIMEOUT = 2000;
 
@@ -98,7 +99,7 @@ export default class Network {
       const bin = localStorage.getItem(this.topologyKey);
 
       if (bin) {
-        return Topology.load(Boss.load(decode64(bin)));
+        return Topology.load(boss.load(decode64(bin)));
       }
     }
 
@@ -117,7 +118,7 @@ export default class Network {
 
     if (!this.topology) throw new Error("Can't save undefined topology");
     const packed = this.topology.pack();
-    localStorage.setItem(this.topologyKey, encode64(Boss.dump(packed)));
+    localStorage.setItem(this.topologyKey, encode64(boss.dump(packed)));
   }
 
   async connect() {
@@ -348,7 +349,7 @@ export default class Network {
   async registerParcel(parcel: Parcel): Promise<ParcelState> {
     const self = this;
 
-    const packedItem = Boss.dump(parcel);
+    const packedItem = boss.dump(parcel);
     const connection = await this.getRandomConnection();
 
     const paymentId = await parcel.payment.contract.hashId();

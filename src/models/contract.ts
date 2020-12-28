@@ -1,4 +1,6 @@
-import { Boss, KeyAddress, PublicKey, PrivateKey, encode64 } from 'unicrypto';
+import { KeyAddress, PublicKey, PrivateKey, encode64 } from 'unicrypto';
+import BossSingleton from '../boss';
+const boss = BossSingleton.getInstance();
 import Capsule from './capsule';
 import Reference from './reference';
 import { CreateCapsuleOptions } from './capsule';
@@ -70,8 +72,8 @@ export default class Contract {
     let i = 0;
 
     const query = this.signatures.map(async (signature) => {
-      const { exts } = Boss.load(signature);
-      const targetSignature = Boss.load(exts);
+      const { exts } = boss.load(signature);
+      const targetSignature = boss.load(exts);
 
       return await PublicKey.unpack(targetSignature['pub_key']);
     });
@@ -93,8 +95,8 @@ export default class Contract {
 
       let pub = publicKey;
       if (!pub) {
-        const { exts } = Boss.load(signature);
-        const targetSignature = Boss.load(exts);
+        const { exts } = boss.load(signature);
+        const targetSignature = boss.load(exts);
 
         pub = await PublicKey.unpack(targetSignature['pub_key']);
       }
@@ -129,7 +131,7 @@ export default class Contract {
   }
 
   pack() {
-    const packed = Boss.dump({
+    const packed = boss.dump({
       data: this.data,
       signatures: this.signatures,
       type: this.type,
@@ -163,7 +165,7 @@ export default class Contract {
   }
 
   static unpack(binary: Uint8Array) {
-    const raw = Boss.load(binary);
+    const raw = boss.load(binary);
 
     return new Contract(raw.data, raw.signatures, {
       type: raw.type,

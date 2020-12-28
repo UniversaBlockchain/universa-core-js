@@ -1,4 +1,6 @@
-import { Boss, BossSerializable } from 'unicrypto';
+import { BossSerializable } from 'unicrypto';
+import BossSingleton from '../boss';
+const boss = BossSingleton.getInstance();
 
 import Big from 'big.js';
 // import Contract from './contract';
@@ -27,8 +29,8 @@ export default class Parcel implements BossSerializable {
   ) {
     this.paymentBin = payment;
     this.payloadBin = payload;
-    this.payment = Boss.load(payment);
-    this.payload = Boss.load(payload);
+    this.payment = boss.load(payment);
+    this.payload = boss.load(payload);
     this.hashId = hashId;
   }
 
@@ -91,12 +93,12 @@ export default class Parcel implements BossSerializable {
   }
 
   pack() {
-    return Boss.dump(this);
+    return boss.dump(this);
   }
 
   static unpack(bin: Uint8Array): Parcel {
-    return Boss.load(bin) as Parcel;
+    return boss.load(bin) as Parcel;
   }
 }
 
-Boss.register("Parcel", Parcel);
+boss.register("Parcel", Parcel);

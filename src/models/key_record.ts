@@ -1,9 +1,9 @@
 import {
   PublicKey,
-  BossSerializable,
-  BossDeserializable,
-  Boss
+  BossSerializable
 } from 'unicrypto';
+import BossSingleton from '../boss';
+const boss = BossSingleton.getInstance();
 
 import { Primitive, Dict, omitBOSS } from '../utils';
 
@@ -53,12 +53,12 @@ export default class KeyRecord implements BossSerializable {
   }
 
   pack() {
-    return Boss.dump(this);
+    return boss.dump(this);
   }
 
   static unpack(bin: Uint8Array): KeyRecord {
-    return Boss.load(bin) as KeyRecord;
+    return boss.load(bin) as KeyRecord;
   }
 }
 
-Boss.register("KeyRecord", KeyRecord);
+boss.register("KeyRecord", KeyRecord);

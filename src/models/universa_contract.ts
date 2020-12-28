@@ -1,4 +1,6 @@
-import { Boss, BossSerializable, shortId } from 'unicrypto';
+import { BossSerializable, shortId } from 'unicrypto';
+import BossSingleton from '../boss';
+const boss = BossSingleton.getInstance();
 import { Role, RoleDictionary } from './roles/role';
 import RoleLink from './roles/role_link';
 import HashId from './hash_id';
@@ -252,4 +254,4 @@ export class UniversaContract implements BossSerializable {
   }
 }
 
-Boss.register("UniversaContract", UniversaContract);
+boss.register("UniversaContract", UniversaContract);

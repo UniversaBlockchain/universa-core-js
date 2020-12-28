@@ -1,4 +1,5 @@
-import { Boss } from 'unicrypto';
+import BossSingleton from '../boss';
+const boss = BossSingleton.getInstance();
 import { Role } from './roles/role';
 import { UniversaContract } from './universa_contract';
 import Permission from './permissions/permission';
@@ -33,7 +34,7 @@ export default class Capsule {
   }
 
   static unpack(bin: Uint8Array) {
-    const raw = Boss.load(bin);
+    const raw = boss.load(bin);
 
     return new Capsule(raw.contract, { new: raw.new, revoking: raw.revoking });
   }
@@ -71,7 +72,7 @@ export default class Capsule {
   get transactional() { return this.contract.transactional; }
 
   pack() {
-    return Boss.dump({
+    return boss.dump({
       contract: this.contract,
       new: this.new,
       revoking: this.revoking
