@@ -23,10 +23,10 @@
     "url": "https://github.com/UniversaBlockchain/universa-core-js"
   },
   "dependencies": {
-    "big.js": "6.0.1",
     "@types/big.js": "6.0.1",
+    "big.js": "6.0.1",
     "node-fetch": "^2.6.1",
-    "unicrypto": "^1.3.0",
+    "unicrypto": "^1.3.1",
     "xhr-request": "^1.1.0"
   },
   "devDependencies": {
