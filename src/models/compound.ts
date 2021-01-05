@@ -43,6 +43,17 @@ export default class Compound {
     const mainContract = await this.tpack.getItem(mainId);
 
     const tpack = new TransactionPack(mainContract.binary as Uint8Array);
+
+    const newItemIds = mainContract.capsule.new;
+    const revokingItemIds = mainContract.capsule.revoking;
+    const subItemIds = newItemIds.concat(revokingItemIds);
+
+    for (let i = 0; i < subItemIds.length; i++) {
+      let id = subItemIds[i];
+      let contract = await this.tpack.getItem(id);
+      await tpack.addSubItem(contract.binary as Uint8Array);
+    }
+
     const refs: Array<string> = contractInfo.refs || [];
 
     for (let i = 0; i < refs.length; i++) {
