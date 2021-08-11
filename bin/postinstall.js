@@ -12,9 +12,9 @@ projectRoot = path.dirname(projectRoot);
 const distPaths = ['build', 'public', 'dist'];
 
 let copiedBuild = false;
+const CORE_VERSION = process.env.npm_package_version;
 
 function copyBuild(destination) {
-  const CORE_VERSION = process.env.npm_package_version;
   let root = path.dirname(require.main.filename);
   root = path.dirname(root);
 
