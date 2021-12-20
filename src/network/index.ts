@@ -5,6 +5,7 @@ import NodeConnection from './node_connection';
 import TransactionPack from '../models/transaction_pack';
 import Parcel from '../models/parcel';
 import HashId from '../models/hash_id';
+import { Estimator } from './estimator';
 
 const mainnet = require('../../mainnet.json');
 
@@ -40,6 +41,13 @@ interface ContractState {
   isApproved: boolean,
   isTestnet: boolean,
   states: any
+}
+
+export interface NetworkApproval {
+  id: Uint8Array;
+  meanTime: Date;
+  stdevSeconds: number;
+  trustLevel: number;
 }
 
 interface ParcelState {
@@ -183,7 +191,7 @@ export default class Network {
     }), req);
   }
 
-  checkContract(
+  getState(
     id: HashId | Uint8Array | string,
     connection?: NodeConnection,
     requestOptions?: any) {
@@ -205,6 +213,130 @@ export default class Network {
     const hashId = createHashId(itemId);
 
     return this.command("getParcelProcessingState", { parcelId: hashId });
+  }
+
+  checkContract(
+    id: HashId | Uint8Array | string,
+    trustLevel: number
+  ): Promise<NetworkApproval|null> {
+    const self = this;
+    let itemId: Uint8Array;
+    if (typeof id === "string") itemId = decode64(id);
+    else if (id.constructor.name === 'HashId') itemId = (id as HashId).composite3;
+    else itemId = id as Uint8Array;
+
+    return new Promise((resolve, reject) => {
+      let tLevel = trustLevel;
+      if (tLevel > 0.9) tLevel = 0.9;
+
+      const size = self.size();
+      if (!size) throw new Error("missing topology");
+
+      let Nt = Math.ceil(size * tLevel);
+      if (Nt < 1) Nt = 1;
+      const N10 = (Math.floor(size * 0.1)) + 1;
+      const Nn = Math.max(Nt + 1, N10);
+
+      let resultFound = false;
+
+      let createdAtList: Array<Date> = [];
+      let positive = 0;
+      let negative = 0;
+      let states: { [st: string]: number } = {};
+      let isTestnet: boolean;
+
+      const requests: Array<Cancelable<any>> = [];
+      if (!self.topology) throw new Error("missing topology");
+      const ids = Object.keys(self.topology.nodes);
+
+      const isPending = (state: string) =>
+        state.indexOf("PENDING") === 0 || state.indexOf("LOCKED") === 0;
+
+      function success(status: boolean) {
+        if (resultFound) return;
+
+        resultFound = true;
+
+        if (!status) return resolve(null);
+
+        const createdAtMs = createdAtList.map(d => d.getTime());
+        const meanT = createdAtMs.reduce((p, n) => p + n) / createdAtMs.length;
+        const meanTime = new Date(meanT);
+
+        const estimator = new Estimator();
+        createdAtMs.forEach(c => estimator.addSample(c / 1000));
+
+        const result: NetworkApproval = {
+          id: itemId,
+          meanTime,
+          stdevSeconds: estimator.stdev,
+          trustLevel: Nn / size
+        };
+
+        resolve(result);
+      }
+
+      function failure(err: Error) {
+        if (resultFound) return;
+
+        resultFound = true;
+        reject(err);
+      }
+
+      function processNext() {
+        if (!resultFound && ids.length > 0) {
+          const id = ids.pop();
+          id && processNode(id);
+        } else failure(new Error("not enough responses to find consensus"));
+      }
+
+      function processVote(itemResult: ItemResult, nodeId: string) {
+        if (resultFound) return;
+        const { state } = itemResult;
+        if (isPending(state)) return ids.unshift(nodeId);
+
+        if (!states[state]) states[state] = 1;
+        else states[state] += 1;
+
+        if (state === "APPROVED") {
+          positive++;
+          if (itemResult.createdAt) createdAtList.push(itemResult.createdAt);
+          if (positive >= Nt) return success(true);
+        }
+        else {
+          negative++;
+          if (negative >= N10) return success(false);
+        }
+
+        if (positive + negative >= Nt) processNext();
+      }
+
+      async function processNode(nodeId: string) {
+        if (resultFound) return;
+
+        try {
+          const conn = await self.nodeConnection(nodeId);
+          if (resultFound) return;
+
+          const req = self.getState(id, conn, {
+            timeout: CHECK_CONTRACT_TIMEOUT
+          });
+          requests.push(req);
+          const response = await req;
+          const { itemResult } = response;
+
+          isTestnet = itemResult.isTestnet;
+
+          processVote(itemResult, nodeId);
+        } catch (err) {
+          console.log("On check contract: ", err);
+          if (ids.length > 0) processNext();
+          else failure(new Error("not enough responses"));
+        }
+      }
+
+      for (let i = 0; i < Nt; i++) processNext();
+    });
   }
 
   isApprovedExtended(
@@ -292,12 +424,13 @@ export default class Network {
           const conn = await self.nodeConnection(nodeId);
           if (resultFound) return;
 
-          const req = self.checkContract(id, conn, {
+          const req = self.getState(id, conn, {
             timeout: CHECK_CONTRACT_TIMEOUT
           });
           requests.push(req);
           const response = await req;
           const { itemResult } = response;
+          // console.log(itemResult);
 
           if (onNodeResponse) onNodeResponse({ nodeId, itemResult });
 
@@ -393,7 +526,7 @@ export default class Network {
         return await finalState(id);
       }
 
-      const response = await self.checkContract(id, connection);
+      const response = await self.getState(id, connection);
 
       return await check(response);
     }

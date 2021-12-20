@@ -541,6 +541,28 @@ try {
 catch (err) { console.log("on network command:", err); }
 ```
 
+### Check full contract status (extended info)
+Special command to check contract status over network
+checkContract(contractId: HashId | Uint8Array | string, trustLevel: Double)
+
+```js
+import { Network, PrivateKey } from 'universa-core';
+
+// privateKey is PrivateKey instance
+const network = new Network(privateKey);
+let status: NetworkApproval|null;
+
+try { await network.connect(); }
+catch (err) { console.log("network connection error: ", err); }
+
+try {
+  // approvedId can be Uint8Array or base64 string
+  status = await network.checkContract(approvedId, 0.6);
+}
+catch (err) { console.log("on network command:", err); }
+```
+
+
 ### Get network current time
 Contract revisions that contain state.createdAt time far in past or future will be declined. To avoid this, it's recommended to use network current time while creating revisions.
 
