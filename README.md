@@ -546,7 +546,7 @@ Special command to check contract status over network
 checkContract(contractId: HashId | Uint8Array | string, trustLevel: Double)
 
 ```js
-import { Network, PrivateKey } from 'universa-core';
+import { Network, PrivateKey, NetworkApproval } from 'universa-core';
 
 // privateKey is PrivateKey instance
 const network = new Network(privateKey);
