@@ -26,7 +26,7 @@
     "@types/big.js": "6.0.1",
     "big.js": "6.0.1",
     "node-fetch": "^2.6.1",
-    "unicrypto": "^1.8.11",
+    "unicrypto": "^1.12.2",
     "xhr-request": "^1.1.0"
   },
   "devDependencies": {
