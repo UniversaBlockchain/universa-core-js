@@ -1,8 +1,9 @@
 {
   "name": "universa-core",
-  "version": "1.9.0",
+  "version": "1.9.1",
   "description": "Tools to perform basic operations with Universa networks and contracts",
-  "main": "src/index.ts",
+  "main": "dist/uni.min.js",
+  "types": "dist/types/index.d.ts",
   "scripts": {
     "coverage": "nyc npm run test",
     "test": "mocha --timeout 150000 -r ts-node/register test/**/*.ts",
@@ -26,7 +27,7 @@
     "@types/big.js": "6.0.1",
     "big.js": "6.0.1",
     "node-fetch": "^2.6.1",
-    "unicrypto": "^1.12.2",
+    "unicrypto": "^1.14.0",
     "xhr-request": "^1.1.0"
   },
   "devDependencies": {
@@ -43,7 +44,7 @@
     "terser-webpack-plugin": "^2.2.2",
     "ts-loader": "^8.0.1",
     "ts-node": "^8.6.2",
-    "typescript": "^3.8.3",
+    "typescript": "^4.1.6",
     "webpack": "^4.41.2",
     "webpack-cli": "^3.3.10",
     "webpack-merge": "^4.2.2"

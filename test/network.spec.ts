@@ -120,7 +120,7 @@ describe('Network', function() {
       this.timeout(5000);
       let response;
 
-      try { response = await network.checkContract(approvedId); }
+      try { response = await network.checkContract(approvedId, 0.7); }
       catch (err) { console.log("on network command:", err); }
 
       response.itemResult.state.should.equal("APPROVED");
@@ -130,7 +130,7 @@ describe('Network', function() {
       this.timeout(5000);
       let response;
 
-      try { response = await network.checkContract(approvedId); }
+      try { response = await network.checkContract(approvedId, 0.7); }
       catch (err) { console.log("on network command:", err); }
 
       response.itemResult.state.should.equal("APPROVED");
