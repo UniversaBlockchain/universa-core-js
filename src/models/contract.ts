@@ -89,20 +89,24 @@ export default class Contract {
     const data = this.data;
     const self = this;
 
+    if (publicKey == null && address == null) throw new Error("No address or key was given");
+
     async function verify(index: number): Promise<boolean> {
       if (index >= signaturesTotal) return false;
       const signature = self.signatures[index];
 
       let pub = publicKey;
-      if (!pub) {
+      if (pub != null) {
+        const verified = await pub.verifyExtended(signature, data);
+        if (verified) return true;
+      } else {
         const { exts } = boss.load(signature);
         const targetSignature = boss.load(exts);
+        const unpackedKey = await PublicKey.unpack(targetSignature['pub_key']);
 
-        pub = await PublicKey.unpack(targetSignature['pub_key']);
+        if (address?.isMatchingKey(unpackedKey)) return true;
       }
 
-      const verified = await pub.verifyExtended(signature, data);
-      if (verified) return true;
       return await verify(index + 1);
     }
 

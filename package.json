@@ -1,6 +1,6 @@
 {
   "name": "universa-core",
-  "version": "1.9.1",
+  "version": "1.9.2",
   "description": "Tools to perform basic operations with Universa networks and contracts",
   "main": "dist/uni.min.js",
   "types": "dist/types/index.d.ts",
